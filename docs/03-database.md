@@ -311,6 +311,21 @@ Lịch sử này là audit cho các xác nhận thanh toán thủ công; không 
 6. Không dùng enum database ở V1; dùng varchar + PHP Enum/validation để dễ mở rộng trạng thái.
 7. `currency` là cột bắt buộc trên Cart, Order và Payment; V1 đã chốt chỉ dùng `VND`, cấu hình ứng dụng và dữ liệu mới phải dùng giá trị này.
 
+## Nhóm Content — đã tạo theo yêu cầu quản trị nội dung
+
+### `site_contents`
+
+| Cột | Kiểu / ràng buộc |
+| --- | --- |
+| `id` | bigint PK |
+| `key` | varchar(120), unique; khóa ổn định được định nghĩa tại `config/site-content.php` |
+| `type` | varchar(20); `text`, `textarea`, `email` hoặc `image` |
+| `value` | longtext nullable; ảnh lưu đường dẫn tương đối trên public disk |
+| `updated_by` | nullable FK → `users`, `SET NULL` |
+| timestamps | audit cơ bản |
+
+Module Content chỉ sở hữu nội dung biên tập/brand dùng chung. Tên, mô tả, ảnh, giá và tồn kho sản phẩm vẫn thuộc Catalog; trạng thái Order/Payment/Appointment và thông báo validation không chuyển thành dữ liệu động.
+
 ## Thứ tự migration đề xuất
 
 ```text
@@ -325,6 +340,7 @@ Lịch sử này là audit cho các xác nhận thanh toán thủ công; không 
 9. create_inventory_movements_table
 10. create_appointments_table
 11. create_appointment_status_histories_table
+12. create_site_contents_table
 ```
 
-Không tạo coupon, review, wishlist, CMS hoặc nhiều kho khi chưa có yêu cầu nghiệp vụ. Đây là dữ liệu thừa ở V1 và sẽ làm luồng chính khó giữ nhất quán.
+Không tạo review, wishlist hoặc nhiều kho khi chưa có yêu cầu nghiệp vụ. Content CMS đã được thêm theo yêu cầu nhưng phải giữ ranh giới với dữ liệu Catalog và quy trình giao dịch.

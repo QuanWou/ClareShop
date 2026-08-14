@@ -13,9 +13,9 @@
                 <span aria-current="page">Tìm kiếm</span>
             </nav>
 
-            <p class="eyebrow">Tìm trong Clare</p>
-            <h1 id="search-results-title">Kết quả cho <mark>“{{ $query }}”</mark></h1>
-            <p>Thử một kiểu đèn, chất liệu hoặc tên góc nhà. Clare sẽ tìm trong những mẫu đang thực sự có bán.</p>
+            <p class="eyebrow">{{ $siteContent->get('search_hero_eyebrow') }}</p>
+            <h1 id="search-results-title">{{ $siteContent->get('search_title_prefix') }} <mark>“{{ $query }}”</mark></h1>
+            <p>{{ $siteContent->get('search_intro') }}</p>
 
             <form class="catalog-search-form" action="{{ route('catalog.search') }}" method="get" role="search">
                 <label for="search-results-query">Bạn muốn tìm chiếc đèn nào?</label>
@@ -30,7 +30,7 @@
     <section class="catalog-search-results section" aria-labelledby="search-list-title">
         <div class="shell">
             <nav class="search-category-suggestions" aria-label="Khám phá theo danh mục" data-search-categories data-reveal>
-                <span>Hoặc xem nhanh</span>
+                <span>{{ $siteContent->get('search_quick_label') }}</span>
                 <a href="{{ route('catalog.products.index') }}">Tất cả đèn</a>
                 @foreach ($categories as $category)
                     <a href="{{ route('catalog.collections.show', $category) }}">
@@ -42,7 +42,7 @@
             <div class="search-listing-heading" data-reveal>
                 <div>
                     <p class="eyebrow">Những kết quả gần nhất</p>
-                    <h2 id="search-list-title">{{ $products->total() > 0 ? 'Có thể bạn đang tìm.' : 'Chưa thấy chiếc đèn ấy.' }}</h2>
+                    <h2 id="search-list-title">{{ $products->total() > 0 ? $siteContent->get('search_results_title') : 'Chưa thấy chiếc đèn ấy.' }}</h2>
                 </div>
                 <p><strong>{{ $products->total() }}</strong> sản phẩm phù hợp</p>
             </div>
@@ -55,7 +55,7 @@
                         <span class="catalog-search-empty-mark" aria-hidden="true">?</span>
                         <div>
                             <h2>Clare chưa tìm thấy “{{ $query }}”.</h2>
-                            <p>Thử từ khóa ngắn hơn như “đèn bàn”, “gỗ”, “opal”, hoặc khám phá toàn bộ catalog đang có.</p>
+                            <p>{{ $siteContent->get('search_empty_body') }}</p>
                         </div>
                         <a class="button button-primary" href="{{ route('catalog.products.index') }}">Xem tất cả đèn</a>
                     </div>

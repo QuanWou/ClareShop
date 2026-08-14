@@ -9,8 +9,8 @@
     <x-auth-shell
         eyebrow="Thành viên mới"
         heading-id="register-title"
-        intro="Tạo tài khoản để đặt hàng an toàn, theo dõi từng chặng giao và lưu những yêu cầu tư vấn dành riêng cho không gian của bạn."
-        title="Bắt đầu một khoảng sáng mới."
+        :intro="$siteContent->get('register_intro')"
+        :title="$siteContent->get('register_title')"
         variant="register"
         visual-copy="Một tài khoản nhỏ giúp Clare nhớ đúng chiếc đèn, đúng màu và những điều bạn cần cho căn phòng của mình."
         visual-eyebrow="Bắt đầu cùng Clare"

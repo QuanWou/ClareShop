@@ -49,6 +49,7 @@
 - Đã thêm `payment_status_histories` và lệnh an toàn `php artisan clare:grant-admin <email>` để chủ dự án cấp quyền admin cho đúng tài khoản, không tự gán quyền cho dữ liệu có sẵn.
 - Luồng đơn đã có promotion code server-side (một mã/đơn, snapshot audit), ngày giao dự kiến mô phỏng, mã theo dõi nội bộ và timeline các mốc `Chờ xác nhận → Chờ lấy hàng → Đang chuẩn bị giao → Đang giao hàng → Đã giao` để khách xem trong tài khoản; admin là nơi cập nhật trạng thái và quản trị mã ưu đãi.
 - Back office hiện có dashboard vận hành với biểu đồ trạng thái đơn, giá trị đơn bảy ngày, tồn kho thấp và các chỉ số khách hàng; có CRUD an toàn cho catalog (danh mục, sản phẩm, biến thể, ảnh), tìm kiếm/lọc, quản lý mã ưu đãi và quản lý quyền/trạng thái tài khoản. Ảnh admin upload vào disk `public` qua liên kết `public/storage`.
+- Đã có module Content tại `/admin/content`: admin sửa nội dung thương hiệu, header/footer, các khối trang chủ, catalog, collection, tìm kiếm, chi tiết sản phẩm và tiêu đề/giới thiệu trang tài khoản; ảnh hero, banner, câu chuyện và auth có thể thay trực tiếp. Nội dung Catalog theo từng sản phẩm/danh mục vẫn do CRUD Catalog quản lý; nhãn nghiệp vụ, trạng thái và validation giữ cố định trong code.
 
 ## Điều cần kiểm tra trước khi sửa tiếp
 

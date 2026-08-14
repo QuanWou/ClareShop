@@ -4,10 +4,10 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="description" content="{{ $description ?? 'Clare — những mẫu đèn dịu nhẹ cho nhịp sống chậm và căn phòng ấm.' }}">
+        <meta name="description" content="{{ $description ?? $siteContent->get('global_meta_description') }}">
         <meta name="theme-color" content="#f3eee5">
 
-        <title>{{ isset($title) ? $title.' — Clare' : 'Clare — Ánh sáng cho những khoảng nghỉ' }}</title>
+        <title>{{ isset($title) ? $title.' — '.$siteContent->get('global_site_name') : $siteContent->get('global_site_name').' — Ánh sáng cho những khoảng nghỉ' }}</title>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -15,12 +15,12 @@
         <a class="skip-link" href="#main-content">Đi đến nội dung chính</a>
 
         <div class="announcement" role="note">
-            <p>Đèn được chọn cho những khoảng nghỉ thật sự ở nhà.</p>
+            <p>{{ $siteContent->get('global_announcement') }}</p>
         </div>
 
         <header class="site-header">
             <div class="shell header-inner">
-                <a class="wordmark" href="{{ route('catalog.home') }}" aria-label="Clare — về trang chủ">CLARE</a>
+                <a class="wordmark" href="{{ route('catalog.home') }}" aria-label="{{ $siteContent->get('global_site_name') }} — về trang chủ">{{ $siteContent->get('global_site_name') }}</a>
 
                 <nav class="desktop-nav" aria-label="Điều hướng chính">
                     <details class="nav-menu">
@@ -56,12 +56,12 @@
                         </div>
                     </details>
 
-                    <a class="nav-consultation" href="{{ route('appointments.create') }}">Tư vấn chọn đèn</a>
+                    <a class="nav-consultation" href="{{ route('appointments.create') }}">{{ $siteContent->get('global_consultation_label') }}</a>
                 </nav>
 
                 <form class="header-search-panel" id="header-search-panel" action="{{ route('catalog.search') }}" method="get" role="search" aria-hidden="true" data-header-search-form>
                     <label for="header-search-query">Tìm sản phẩm</label>
-                    <input id="header-search-query" name="q" type="search" placeholder="Tìm đèn bàn, opal, gỗ…" minlength="2" maxlength="80" required autocomplete="off" data-search-input>
+                    <input id="header-search-query" name="q" type="search" placeholder="{{ $siteContent->get('global_search_placeholder') }}" minlength="2" maxlength="80" required autocomplete="off" data-search-input>
                     <button class="header-search-submit" type="submit">Tìm kiếm</button>
                     <button class="header-search-close" type="button" aria-label="Đóng tìm kiếm" data-search-close>
                         <span aria-hidden="true">×</span>
@@ -152,8 +152,8 @@
         <footer class="site-footer" id="about">
             <div class="shell footer-grid">
                 <div>
-                    <a class="wordmark footer-wordmark" href="{{ route('catalog.home') }}">Clare</a>
-                    <p>Những chiếc đèn được chọn để căn phòng dịu đi, và mỗi buổi tối có thêm một khoảng nghỉ.</p>
+                    <a class="wordmark footer-wordmark" href="{{ route('catalog.home') }}">{{ $siteContent->get('global_site_name') }}</a>
+                    <p>{{ $siteContent->get('global_footer_description') }}</p>
                 </div>
 
                 <div>
@@ -164,12 +164,12 @@
 
                 <div>
                     <p class="footer-label">Liên hệ</p>
-                    <a class="footer-contact-email" href="mailto:hello@clare.local">
+                    <a class="footer-contact-email" href="mailto:{{ $siteContent->get('global_contact_email') }}">
                         <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none">
                             <rect x="3" y="5" width="18" height="14" rx="1.5" stroke="currentColor" stroke-width="1.6" />
                             <path d="m4 7 7.05 5.29a1.6 1.6 0 0 0 1.9 0L20 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <span>hello@clare.local</span>
+                        <span>{{ $siteContent->get('global_contact_email') }}</span>
                     </a>
                     <a href="{{ route('appointments.create') }}">Tư vấn ánh sáng</a>
                 </div>
@@ -209,8 +209,8 @@
             </div>
 
             <div class="shell footer-bottom">
-                <span>© {{ now()->year }} Clare.</span>
-                <span>Thiết kế và nội dung nguyên bản.</span>
+                <span>© {{ now()->year }} {{ $siteContent->get('global_site_name') }}.</span>
+                <span>{{ $siteContent->get('global_footer_signature') }}</span>
             </div>
         </footer>
     </body>

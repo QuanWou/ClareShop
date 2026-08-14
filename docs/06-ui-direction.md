@@ -63,3 +63,9 @@ Tham khảo cảm giác mềm, sáng và giàu không gian của Clare.com: nề
 - Selector màu phải là button/radio có tên màu hiển thị cho screen reader.
 - Ảnh có `alt_text`; ảnh trang trí có alt rỗng.
 - Không dùng hover là cách duy nhất để thấy thông tin quan trọng.
+
+## Quản trị nội dung
+
+- Admin Content chia trường theo đúng khu vực storefront, có điều hướng nhanh, preview ảnh, giới hạn ký tự và thanh lưu sticky.
+- Ảnh hero, brand banner, khối chất liệu và auth có thể thay bằng JPG/PNG/WebP; giao diện dùng fallback trong config trước khi database được seed.
+- Nội dung động phải được escape mặc định qua Blade; không cho nhập HTML tùy ý. Dữ liệu Catalog và các nhãn nghiệp vụ tiếp tục đi qua module sở hữu tương ứng.

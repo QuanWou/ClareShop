@@ -18,7 +18,7 @@
             <div class="collection-hero-grid">
                 <div class="collection-hero-copy" data-reveal data-reveal-immediate>
                     <p class="eyebrow">Bộ sưu tập Clare / {{ str_pad($category->sort_order + 1, 2, '0', STR_PAD_LEFT) }}</p>
-                    <h1 id="collection-title">{{ $category->name }}<em>, dành cho góc bạn thương.</em></h1>
+                    <h1 id="collection-title">{{ $category->name }} <em>{{ $siteContent->get('collection_heading_suffix') }}</em></h1>
                     <p class="collection-hero-intro">{{ $category->description }}</p>
 
                     <dl class="collection-hero-facts">
@@ -56,7 +56,7 @@
         <div class="shell">
             <div class="collection-filter-panel" data-reveal>
                 <div>
-                    <span>Khám phá theo góc nhà</span>
+                    <span>{{ $siteContent->get('collection_filter_label') }}</span>
                     <strong>{{ $category->name }}</strong>
                 </div>
 
@@ -79,7 +79,7 @@
 
             <div class="collection-listing-heading" data-reveal>
                 <div>
-                    <p class="eyebrow">Chọn một chiếc thật vừa</p>
+                    <p class="eyebrow">{{ $siteContent->get('collection_listing_eyebrow') }}</p>
                     <h2 id="collection-products-title">{{ $category->name }} đang có.</h2>
                 </div>
                 <p><strong>{{ $products->total() }}</strong> sản phẩm<br><span>Mẫu Clare chọn đặt trước</span></p>
@@ -108,10 +108,10 @@
                 <div class="collection-guidance-index" aria-hidden="true">01</div>
                 <div>
                     <p class="eyebrow">Một gợi ý nhỏ</p>
-                    <h2 id="collection-guidance-title">Hãy bắt đầu từ nơi bạn muốn chậm lại.</h2>
-                    <p>Chọn dáng đèn bạn thấy vui mắt trước. Ở trang chi tiết, Clare sẽ cho bạn xem rõ màu, kích thước, chất liệu và lượng hàng của từng lựa chọn.</p>
+                    <h2 id="collection-guidance-title">{{ $siteContent->get('collection_guidance_title') }}</h2>
+                    <p>{{ $siteContent->get('collection_guidance_body') }}</p>
                 </div>
-                <a class="button button-light" href="{{ route('appointments.create') }}">Cùng Clare chọn đèn</a>
+                <a class="button button-light" href="{{ route('appointments.create') }}">{{ $siteContent->get('collection_guidance_cta') }}</a>
             </aside>
         </div>
     </section>

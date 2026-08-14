@@ -1,5 +1,5 @@
 @extends('layouts.storefront', [
-    'description' => 'Khám phá đèn bàn và đèn tường Clare — ánh sáng ấm, chất liệu tự nhiên và kiểu dáng nhẹ nhàng cho ngôi nhà.',
+    'description' => $siteContent->get('home_meta_description'),
     'bodyClass' => 'catalog-home',
 ])
 
@@ -7,26 +7,26 @@
     <section class="hero home-hero" data-home-hero>
         <div class="shell hero-grid">
             <div class="hero-copy" data-reveal data-reveal-immediate>
-                <p class="eyebrow">Clare / Ánh sáng cho căn nhà</p>
-                <h1>Đèn dịu.<br>Nhịp sống <em>êm.</em></h1>
-                <p class="hero-intro">Khám phá những dáng đèn cho bàn cạnh giường, góc đọc sách và mọi nơi bạn muốn căn phòng trở nên dễ chịu hơn.</p>
+                <p class="eyebrow">{{ $siteContent->get('home_hero_eyebrow') }}</p>
+                <h1>{{ $siteContent->get('home_hero_title_first') }}<br>{{ $siteContent->get('home_hero_title_second') }} <em>{{ $siteContent->get('home_hero_title_emphasis') }}</em></h1>
+                <p class="hero-intro">{{ $siteContent->get('home_hero_intro') }}</p>
 
                 <div class="hero-actions">
-                    <a class="button button-primary" href="#selected">Xem bộ sưu tập</a>
-                    <a class="text-link" href="#services">Tìm đèn phù hợp</a>
+                    <a class="button button-primary" href="#selected">{{ $siteContent->get('home_hero_primary_cta') }}</a>
+                    <a class="text-link" href="#services">{{ $siteContent->get('home_hero_secondary_cta') }}</a>
                 </div>
             </div>
 
             <figure class="hero-visual" data-reveal data-reveal-immediate>
                 <div class="hero-visual-media">
                     <img
-                        src="{{ asset('images/catalog/hero-ru-dem.png') }}"
-                        alt="Đèn Ru Đêm tỏa ánh sáng ấm trên tủ gỗ cạnh giường"
+                        src="{{ $siteContent->asset('home_hero_image') }}"
+                        alt="{{ $siteContent->get('home_hero_image_alt') }}"
                         width="1536"
                         height="1024"
                         data-parallax="18"
                     >
-                    <span class="hero-visual-note">Phòng ngủ / Ánh sáng ấm</span>
+                    <span class="hero-visual-note">{{ $siteContent->get('home_hero_note') }}</span>
                     <span class="hero-visual-index" aria-hidden="true">01</span>
                 </div>
                 <figcaption>
@@ -39,10 +39,10 @@
 
     <section class="home-manifesto" aria-labelledby="home-manifesto-title" data-reveal>
         <div class="shell home-manifesto-grid">
-            <p class="eyebrow">Chọn ít hơn, sống cùng lâu hơn</p>
+            <p class="eyebrow">{{ $siteContent->get('home_manifesto_eyebrow') }}</p>
             <div>
-                <h2 id="home-manifesto-title">Mỗi dáng đèn đều bắt đầu bằng một khoảnh khắc trong nhà.</h2>
-                <p>Clare chọn ánh sáng theo cách bạn sử dụng căn phòng: đủ ấm khi đọc, đủ dịu trước giờ ngủ và vừa vặn cho một góc nhỏ của riêng mình.</p>
+                <h2 id="home-manifesto-title">{{ $siteContent->get('home_manifesto_title') }}</h2>
+                <p>{{ $siteContent->get('home_manifesto_body') }}</p>
             </div>
         </div>
     </section>
@@ -51,10 +51,10 @@
         <div class="shell">
             <div class="section-heading split-heading collection-section-heading" data-reveal>
                 <div>
-                    <p class="eyebrow">Khám phá theo không gian</p>
-                    <h2>Đặt đúng nơi.<br><em>Sáng đúng cách.</em></h2>
+                    <p class="eyebrow">{{ $siteContent->get('home_collections_eyebrow') }}</p>
+                    <h2>{{ $siteContent->get('home_collections_title') }}<br><em>{{ $siteContent->get('home_collections_emphasis') }}</em></h2>
                 </div>
-                <p>Hai bộ sưu tập nhỏ, được biên tập cho những nhịp sống khác nhau trong một căn nhà.</p>
+                <p>{{ $siteContent->get('home_collections_description') }}</p>
             </div>
 
             <div class="collection-grid" data-reveal-group>
@@ -85,25 +85,25 @@
         <div class="shell">
             <header class="brand-banner-heading" data-reveal>
                 <div>
-                    <p class="eyebrow">Không gian Clare</p>
-                    <h2 id="brand-banner-title">Một dải sáng.<br><em>Nhiều khoảng dịu.</em></h2>
+                    <p class="eyebrow">{{ $siteContent->get('home_banner_eyebrow') }}</p>
+                    <h2 id="brand-banner-title">{{ $siteContent->get('home_banner_title') }}<br><em>{{ $siteContent->get('home_banner_emphasis') }}</em></h2>
                 </div>
-                <p>Mỗi chiếc đèn là một điểm sáng nhỏ; khi đặt cạnh nhau, chúng tạo nên nhịp điệu ấm áp cho cả căn phòng.</p>
+                <p>{{ $siteContent->get('home_banner_description') }}</p>
             </header>
 
             <figure class="brand-banner-figure" data-reveal>
                 <div class="brand-banner-media" data-ambient>
                     <img
-                        src="{{ asset('images/catalog/banner.png') }}"
-                        alt="Không gian phòng ngủ Clare với nhiều mẫu đèn tỏa ánh sáng ấm"
+                        src="{{ $siteContent->asset('home_banner_image') }}"
+                        alt="{{ $siteContent->get('home_banner_image_alt') }}"
                         loading="lazy"
                         width="1840"
                         height="855"
                         data-parallax="22"
                     >
-                    <span class="brand-banner-edition">The Clare edit / 2026</span>
+                    <span class="brand-banner-edition">{{ $siteContent->get('home_banner_edition') }}</span>
                     <a class="brand-banner-link" href="{{ route('catalog.products.index') }}">
-                        <span>Xem tất cả đèn</span>
+                        <span>{{ $siteContent->get('home_banner_cta') }}</span>
                         <span aria-hidden="true">↗</span>
                     </a>
                 </div>
@@ -120,10 +120,10 @@
         <div class="shell">
             <div class="catalog-heading" data-reveal>
                 <div>
-                    <p class="eyebrow">Danh mục Clare</p>
-                    <h2>Những mẫu đèn<br>được chọn.</h2>
+                    <p class="eyebrow">{{ $siteContent->get('home_featured_eyebrow') }}</p>
+                    <h2>{{ $siteContent->get('home_featured_title') }}</h2>
                 </div>
-                <p>Chọn màu, kiểm tra tồn kho và tìm dáng đèn hợp với khoảng nghỉ của bạn.</p>
+                <p>{{ $siteContent->get('home_featured_description') }}</p>
             </div>
 
             <div class="catalog-toolbar" aria-label="Thông tin danh mục" data-reveal>
@@ -146,8 +146,8 @@
             <div class="story-visual" data-reveal>
                 <div class="story-visual-media">
                     <img
-                        src="{{ asset('images/catalog/den-ban-thao-moc.png') }}"
-                        alt="Chi tiết chụp linen và thân gốm của đèn Thảo Mộc"
+                        src="{{ $siteContent->asset('home_story_image') }}"
+                        alt="{{ $siteContent->get('home_story_image_alt') }}"
                         loading="lazy"
                         width="1024"
                         height="1024"
@@ -158,9 +158,9 @@
             </div>
 
             <div class="story-copy" data-reveal>
-                <p class="eyebrow">Chất liệu tạo nên cảm giác</p>
-                <h2 id="material-story-title">Đẹp khi nhìn.<br><em>Dịu khi sống cùng.</em></h2>
-                <p>Gốm mờ, linen dệt thô, thủy tinh opal và kim loại phủ màu trầm được kết hợp để ánh sáng không chỉ hiện ra — mà còn có chiều sâu.</p>
+                <p class="eyebrow">{{ $siteContent->get('home_story_eyebrow') }}</p>
+                <h2 id="material-story-title">{{ $siteContent->get('home_story_title') }}<br><em>{{ $siteContent->get('home_story_emphasis') }}</em></h2>
+                <p>{{ $siteContent->get('home_story_body') }}</p>
 
                 <dl class="story-facts">
                     <div>
@@ -199,12 +199,12 @@
     <section class="help-section section" id="services">
         <div class="shell help-card" data-reveal data-ambient>
             <div>
-                <p class="eyebrow">Cần một chút trợ giúp?</p>
-                <h2>Hãy kể Clare nghe về căn phòng của bạn.</h2>
+                <p class="eyebrow">{{ $siteContent->get('home_help_eyebrow') }}</p>
+                <h2>{{ $siteContent->get('home_help_title') }}</h2>
             </div>
             <div>
-                <p>Chúng tôi sẽ cùng bạn cân nhắc kích thước, nhiệt độ màu và vị trí đặt đèn. Hãy gửi thời gian mong muốn, Clare sẽ xem lại và xác nhận thủ công.</p>
-                <a class="button button-light" href="{{ route('appointments.create') }}">Gửi yêu cầu tư vấn</a>
+                <p>{{ $siteContent->get('home_help_body') }}</p>
+                <a class="button button-light" href="{{ route('appointments.create') }}">{{ $siteContent->get('home_help_cta') }}</a>
             </div>
         </div>
     </section>

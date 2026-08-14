@@ -11,10 +11,10 @@
 ])
 
 <section class="auth-page auth-page--{{ $variant }}" aria-labelledby="{{ $headingId }}">
-    <aside class="auth-visual" aria-label="Không gian ánh sáng Clare">
+    <aside class="auth-visual" aria-label="{{ $siteContent->get('auth_image_label') }}">
         <img
             class="auth-visual-image"
-            src="{{ asset('images/catalog/login.png') }}"
+            src="{{ $siteContent->asset('auth_image') }}"
             alt=""
             aria-hidden="true">
         <span class="auth-visual-glow" aria-hidden="true"></span>
@@ -33,12 +33,12 @@
             @endif
         </div>
 
-        <p class="auth-visual-signature">Ánh sáng cho những khoảng nghỉ</p>
+        <p class="auth-visual-signature">{{ $siteContent->get('auth_visual_signature') }}</p>
     </aside>
 
     <div class="auth-panel">
         <div class="auth-card">
-            <a class="auth-wordmark" href="{{ route('catalog.home') }}" aria-label="Clare — về trang chủ">CLARE</a>
+            <a class="auth-wordmark" href="{{ route('catalog.home') }}" aria-label="{{ $siteContent->get('global_site_name') }} — về trang chủ">{{ $siteContent->get('global_site_name') }}</a>
 
             <div class="auth-heading">
                 <p class="eyebrow">{{ $eyebrow }}</p>

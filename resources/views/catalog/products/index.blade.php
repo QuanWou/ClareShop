@@ -1,6 +1,6 @@
 @extends('layouts.storefront', [
     'title' => $selectedCategory?->name ?? 'Tất cả đèn',
-    'description' => $selectedCategory?->description ?: 'Khám phá toàn bộ các mẫu đèn Clare đang có.',
+    'description' => $selectedCategory?->description ?: $siteContent->get('catalog_meta_description'),
     'bodyClass' => 'catalog-products-page',
 ])
 
@@ -14,20 +14,20 @@
                     <span aria-current="page">{{ $selectedCategory?->name ?? 'Tất cả đèn' }}</span>
                 </nav>
 
-                <p class="eyebrow">Thư viện ánh sáng / Clare</p>
+                <p class="eyebrow">{{ $siteContent->get('catalog_hero_eyebrow') }}</p>
                 <h1 id="all-products-title">
                     @if ($selectedCategory)
-                        {{ $selectedCategory->name }}<em>, chọn cho đúng góc.</em>
+                        {{ $selectedCategory->name }} <em>{{ $siteContent->get('collection_heading_suffix') }}</em>
                     @else
-                        Chiếc đèn khiến bạn <em>muốn về nhà sớm hơn.</em>
+                        {{ $siteContent->get('catalog_hero_title') }} <em>{{ $siteContent->get('catalog_hero_emphasis') }}</em>
                     @endif
                 </h1>
-                <p class="products-hero-intro">{{ $selectedCategory?->description ?? 'Từ chiếc đèn nhỏ bên giường đến ánh sáng cho góc đọc sách — mỗi mẫu Clare đều được chọn để căn phòng ấm hơn mà vẫn là chính bạn.' }}</p>
+                <p class="products-hero-intro">{{ $selectedCategory?->description ?? $siteContent->get('catalog_hero_intro') }}</p>
 
                 <ul class="products-hero-notes" aria-label="Thông tin mua sắm">
-                    <li><span aria-hidden="true"></span>Giá rõ theo từng màu</li>
-                    <li><span aria-hidden="true"></span>Tồn kho cập nhật</li>
-                    <li><span aria-hidden="true"></span>Tư vấn khi bạn cần</li>
+                    <li><span aria-hidden="true"></span>{{ $siteContent->get('catalog_note_price') }}</li>
+                    <li><span aria-hidden="true"></span>{{ $siteContent->get('catalog_note_stock') }}</li>
+                    <li><span aria-hidden="true"></span>{{ $siteContent->get('catalog_note_help') }}</li>
                 </ul>
             </div>
 
@@ -59,7 +59,7 @@
         <div class="shell">
             <div class="products-filter-panel" data-reveal>
                 <div class="products-filter-heading">
-                    <span>Chọn theo góc nhà</span>
+                    <span>{{ $siteContent->get('catalog_filter_label') }}</span>
                     <strong>{{ $selectedCategory?->name ?? 'Tất cả kiểu đèn' }}</strong>
                 </div>
 
@@ -85,12 +85,12 @@
 
             <div class="products-listing-heading" data-reveal>
                 <div>
-                    <p class="eyebrow">Dành cho căn phòng của bạn</p>
+                    <p class="eyebrow">{{ $siteContent->get('catalog_listing_eyebrow') }}</p>
                     <h2 id="products-grid-title">{{ $selectedCategory ? 'Những mẫu '.$selectedCategory->name : 'Tất cả mẫu đang có' }}</h2>
                 </div>
                 <div class="products-listing-meta">
                     <p><strong>{{ $products->total() }}</strong> sản phẩm</p>
-                    <span>Clare chọn mẫu nổi bật trước</span>
+                    <span>{{ $siteContent->get('catalog_sort_note') }}</span>
                     @if ($selectedCategory)
                         <a href="{{ route('catalog.products.index') }}">Gỡ bộ lọc <span aria-hidden="true">×</span></a>
                     @endif
@@ -120,10 +120,10 @@
                 <div class="products-consultation-mark" aria-hidden="true">C</div>
                 <div>
                     <p class="eyebrow">Một lời nhắc nhỏ</p>
-                    <h2 id="products-consultation-title">Chọn đèn cũng giống chọn một người bạn cùng phòng.</h2>
-                    <p>Nó nên vừa vặn, dễ sống cùng và khiến bạn thấy vui mỗi lần bật sáng. Nếu còn phân vân, Clare sẽ cùng bạn chọn.</p>
+                    <h2 id="products-consultation-title">{{ $siteContent->get('catalog_consultation_title') }}</h2>
+                    <p>{{ $siteContent->get('catalog_consultation_body') }}</p>
                 </div>
-                <a class="button button-light" href="{{ route('appointments.create') }}">Kể Clare nghe</a>
+                <a class="button button-light" href="{{ route('appointments.create') }}">{{ $siteContent->get('catalog_consultation_cta') }}</a>
             </aside>
         </div>
     </section>

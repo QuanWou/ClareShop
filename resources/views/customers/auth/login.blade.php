@@ -9,8 +9,8 @@
     <x-auth-shell
         eyebrow="Tài khoản Clare"
         heading-id="login-title"
-        intro="Đăng nhập để tiếp tục hành trình chọn đèn, theo dõi đơn hàng và giữ mọi yêu cầu tư vấn trong một nơi."
-        title="Chào mừng bạn trở lại."
+        :intro="$siteContent->get('login_intro')"
+        :title="$siteContent->get('login_title')"
         variant="login"
         visual-copy="Clare lưu lại những lựa chọn của bạn để hành trình từ một chiếc đèn đẹp đến căn phòng ấm luôn liền mạch."
         visual-eyebrow="Một khoảng sáng thân quen"

@@ -14,6 +14,7 @@ use App\Modules\Catalog\Http\Controllers\CollectionController;
 use App\Modules\Catalog\Http\Controllers\HomeController;
 use App\Modules\Catalog\Http\Controllers\ProductController;
 use App\Modules\Catalog\Http\Controllers\SearchController;
+use App\Modules\Content\Http\Controllers\AdminSiteContentController;
 use App\Modules\Customers\Http\Controllers\AuthenticationController;
 use App\Modules\Customers\Http\Controllers\CustomerAccountController;
 use App\Modules\Customers\Http\Controllers\CustomerOrderController;
@@ -104,6 +105,9 @@ Route::prefix('admin')->as('admin.')->middleware(['auth', 'admin'])->group(funct
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+
+    Route::get('/content', [AdminSiteContentController::class, 'edit'])->name('content.edit');
+    Route::patch('/content', [AdminSiteContentController::class, 'update'])->name('content.update');
 
     Route::get('/appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/{appointment}', [AdminAppointmentController::class, 'show'])->name('appointments.show');

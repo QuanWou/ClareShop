@@ -165,7 +165,7 @@
                     <div class="product-assurances" aria-label="Thông tin mua hàng">
                         <p><span aria-hidden="true">01</span><strong>Giá rõ ràng</strong><small>Theo đúng màu bạn chọn</small></p>
                         <p><span aria-hidden="true">02</span><strong>Tồn kho thật</strong><small>Kiểm tra lại khi thêm giỏ</small></p>
-                        <p><span aria-hidden="true">03</span><strong>Chưa chắc?</strong><a href="{{ route('appointments.create') }}">Nhờ Clare tư vấn</a></p>
+                        <p><span aria-hidden="true">03</span><strong>Chưa chắc?</strong><a href="{{ route('appointments.create') }}">{{ $siteContent->get('product_consultation_label') }}</a></p>
                     </div>
                 </div>
             </div>
@@ -175,8 +175,8 @@
     <section class="product-story section" aria-labelledby="product-story-title">
         <div class="shell product-story-grid">
             <div class="product-story-heading" data-reveal>
-                <p class="eyebrow">Câu chuyện thiết kế</p>
-                <h2 id="product-story-title">Ánh sáng ở đúng mức.</h2>
+                <p class="eyebrow">{{ $siteContent->get('product_story_eyebrow') }}</p>
+                <h2 id="product-story-title">{{ $siteContent->get('product_story_title') }}</h2>
                 <span aria-hidden="true">✦</span>
             </div>
 
@@ -215,8 +215,8 @@
             <div class="shell">
                 <div class="related-products-heading" data-reveal>
                     <div>
-                        <p class="eyebrow">Bạn có thể cũng thích</p>
-                        <h2 id="related-products-title">Cùng một bầu không khí.</h2>
+                        <p class="eyebrow">{{ $siteContent->get('product_related_eyebrow') }}</p>
+                        <h2 id="related-products-title">{{ $siteContent->get('product_related_title') }}</h2>
                     </div>
                     @if ($product->category)
                         <a class="text-link" href="{{ route('catalog.collections.show', $product->category) }}">Xem cả bộ sưu tập <span aria-hidden="true">↗</span></a>
