@@ -3,7 +3,7 @@
 ## Trạng thái và nguyên tắc
 
 - MySQL chạy tại `127.0.0.1:2000`, database `clare`.
-- Catalog đã được migrate. Các bảng Cart, Order, Payment, Inventory và Appointment bên dưới là schema **đã chốt để triển khai theo phase**, chưa được tạo trên máy.
+- Catalog, Cart, Checkout, Order, Payment, Inventory và Appointment đã được migrate.
 - Mọi thay đổi schema dùng migration mới trong `database/migrations/`; không sửa trực tiếp database hoặc sửa migration đã chạy.
 - Dùng InnoDB, `utf8mb4`, foreign key, index và `decimal(12, 2)` cho tiền. Không dùng `float` cho giá/tổng tiền.
 - Soft delete chỉ dùng cho Catalog. Đơn hàng, lịch sử trạng thái và movement là dữ liệu audit nên không xóa mềm tùy tiện.
@@ -88,6 +88,7 @@ erDiagram
 | `price` | decimal(12,2) | Giá bán hiện tại |
 | `compare_at_price` | decimal(12,2), nullable | Giá tham chiếu trước giảm |
 | `stock_quantity` | unsigned integer | Tồn có thể bán hiện tại |
+| `weight_grams` | unsigned integer | Trọng lượng đóng gói dùng để báo giá vận chuyển |
 | `is_active` | boolean, indexed | Biến thể có bán được không |
 | `sort_order` | unsigned small integer | Thứ tự màu |
 | timestamps, `deleted_at` | soft delete | Giữ lịch sử catalog |
@@ -133,7 +134,7 @@ Không thêm bảng roles/permissions ở V1. Nếu sau này có nhiều quyền
 
 Quy tắc: chỉ Action cập nhật địa chỉ được phép đặt `is_default`, trong transaction để một user chỉ có một địa chỉ mặc định.
 
-## Nhóm Cart — tạo ở Phase Cart
+## Nhóm Cart — đã tạo ở Phase 3
 
 ### `carts`
 
@@ -142,7 +143,7 @@ Quy tắc: chỉ Action cập nhật địa chỉ được phép đặt `is_defa
 | `id` | bigint PK |
 | `user_id` | nullable FK → `users`, `SET NULL`, indexed |
 | `guest_token` | UUID/varchar(36), nullable, unique |
-| `currency` | char(3) |
+| `currency` | char(3), V1 dùng `VND` |
 | `expires_at` | timestamp nullable, indexed |
 | timestamps | audit cơ bản |
 
@@ -160,7 +161,7 @@ Guest cart nhận token qua cookie an toàn; sau đăng nhập, Action phải me
 
 Ràng buộc unique: `cart_id + product_variant_id`. Cart không lưu giá snapshot; giá/tồn được đọc lại và kiểm tra khi checkout.
 
-## Nhóm Order và Payment — tạo ở Phase Checkout
+## Nhóm Order và Payment — đã tạo ở Phase Checkout
 
 ### `orders`
 
@@ -168,19 +169,25 @@ Ràng buộc unique: `cart_id + product_variant_id`. Cart không lưu giá snaps
 | --- | --- | --- |
 | `id` | bigint PK | Khóa chính nội bộ |
 | `number` | varchar(32), unique | Mã khách nhìn thấy, ví dụ `CLR-...` |
-| `user_id` | nullable FK → `users`, `SET NULL`, indexed | Guest checkout được phép null |
+| `user_id` | nullable FK → `users`, `SET NULL`, indexed | Mọi đơn mới phải có user; nullable chỉ giữ được các dữ liệu lịch sử từ trước khi áp dụng checkout đăng nhập |
 | `status` | varchar(30), indexed | `pending`, `confirmed`, `processing`, `shipped`, `completed`, `cancelled` |
 | `payment_method` | varchar(30), nullable | Chỉ set sau khi chốt phương thức thanh toán |
 | `payment_status` | varchar(30), indexed | `unpaid`, `pending`, `paid`, `refunded` |
 | `currency` | char(3) | Đơn vị tiền do cấu hình bán hàng quyết định |
 | `customer_name`, `customer_email`, `customer_phone` | varchar | Snapshot liên hệ đặt hàng |
 | shipping fields | `shipping_recipient_name`, `shipping_phone`, `shipping_address_line_1`, `shipping_address_line_2`, `shipping_ward`, `shipping_district`, `shipping_city`, `shipping_postal_code`, `shipping_country_code` | Snapshot giao hàng, không phụ thuộc địa chỉ account |
+| shipping quote fields | `shipping_provider`, `shipping_service`, `shipping_quote_id`, `shipping_quote_payload`, `shipping_total_weight_grams`, `shipping_estimated_days`, `shipping_fee_is_estimated` | Quote vận chuyển và dữ liệu cần thiết để thay adapter GHN/GHTK sau này |
 | `subtotal`, `shipping_fee`, `discount_total`, `total` | decimal(12,2) | Tất cả do server tính |
 | `customer_note`, `admin_note`, `cancel_reason` | text nullable | Ghi chú khách/nội bộ/lý do hủy |
 | `placed_at`, `confirmed_at`, `cancelled_at` | timestamp nullable, indexed khi cần | Mốc nghiệp vụ |
+| fulfillment fields | `estimated_delivery_at`, `preparing_at`, `shipped_at`, `delivered_at`, `shipping_tracking_number` nullable | ETA mô phỏng, mốc vận hành và mã theo dõi sinh nội bộ khi xác nhận đơn |
 | timestamps | audit cơ bản | |
 
 `total = subtotal + shipping_fee - discount_total`; không nhận các tổng tiền này từ client một cách tin cậy.
+
+### `promotion_codes` và `order_discounts`
+
+`promotion_codes` lưu code, tên, kiểu `percentage`/`fixed`, giá trị, đơn tối thiểu, mức giảm tối đa, giới hạn/lượt đã dùng, thời gian hiệu lực và trạng thái bật/tắt. `order_discounts` giữ snapshot một ưu đãi đã áp dụng cho một order, gồm code, tên, kiểu, giá trị và số tiền giảm; một order tối đa có một record. Lượt dùng được khóa và tính lại trong transaction tạo/hủy đơn, nên không tin dữ liệu tổng hoặc mã từ client.
 
 ### `order_items`
 
@@ -230,7 +237,20 @@ Mỗi Action đổi trạng thái order phải tạo một bản ghi history tro
 
 Bảng này chuẩn bị cho payment gateway. V1 có thể chỉ ghi payment manual/COD sau khi phương thức được người dùng chốt.
 
-## Nhóm Inventory — tạo cùng Checkout
+### `payment_status_histories`
+
+| Cột | Kiểu / ràng buộc |
+| --- | --- |
+| `id` | bigint PK |
+| `payment_id` | FK → `payments`, cascade delete |
+| `from_status`, `to_status` | varchar(30); trạng thái trước/sau |
+| `changed_by` | nullable FK → `users`, `SET NULL` |
+| `note` | text nullable; ghi chú đối soát hoặc hoàn tiền |
+| `created_at` | timestamp |
+
+Lịch sử này là audit cho các xác nhận thanh toán thủ công; không đồng nghĩa gateway đã tự động chuyển tiền.
+
+## Nhóm Inventory — đã tạo cùng Checkout
 
 ### `inventory_movements`
 
@@ -248,7 +268,7 @@ Bảng này chuẩn bị cho payment gateway. V1 có thể chỉ ghi payment man
 
 `product_variants.stock_quantity` là số tồn hiện tại để query nhanh. `inventory_movements` là audit trail. Khi tạo hoặc hủy đơn, Action khóa row variant (`lockForUpdate`), thay đổi tồn và ghi movement trong cùng transaction.
 
-## Nhóm Appointment — tạo ở Phase Service
+## Nhóm Appointment — đã tạo ở Phase Service
 
 ### `appointments`
 
@@ -289,7 +309,7 @@ Bảng này chuẩn bị cho payment gateway. V1 có thể chỉ ghi payment man
 4. Không cascade delete từ catalog sang order history. Khi xây bảng Order, dùng `nullOnDelete()` cho reference về product variant/user khi cần giữ lịch sử.
 5. Validate ở Form Request nhưng luôn kiểm tra lại tồn/giá ở Action trong transaction.
 6. Không dùng enum database ở V1; dùng varchar + PHP Enum/validation để dễ mở rộng trạng thái.
-7. `currency` là cột bắt buộc trên Cart, Order và Payment; giá trị mặc định ở cấu hình ứng dụng chỉ được đặt sau khi người dùng chốt tiền tệ bán hàng.
+7. `currency` là cột bắt buộc trên Cart, Order và Payment; V1 đã chốt chỉ dùng `VND`, cấu hình ứng dụng và dữ liệu mới phải dùng giá trị này.
 
 ## Thứ tự migration đề xuất
 
