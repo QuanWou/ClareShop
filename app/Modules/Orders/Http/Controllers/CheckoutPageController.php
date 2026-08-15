@@ -11,6 +11,8 @@ use App\Modules\Customers\Actions\GetDefaultUserAddressAction;
 use App\Modules\Orders\Actions\CreateOrderAction;
 use App\Modules\Orders\Http\Requests\CreateCheckoutOrderRequest;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Orders\Support\PaymentMethodCatalog;
+use App\Modules\Orders\Support\ShippingOptionCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,6 +39,9 @@ class CheckoutPageController extends Controller
             ...$summary,
             'customer' => $this->customer($request),
             'defaultAddress' => $getDefaultAddress->execute($this->customer($request)),
+            'shippingOptions' => ShippingOptionCatalog::forCheckout(),
+            'defaultShippingOption' => ShippingOptionCatalog::defaultCode(),
+            'paymentMethods' => PaymentMethodCatalog::all(),
         ]);
     }
 
@@ -78,6 +83,7 @@ class CheckoutPageController extends Controller
         return view('orders.complete', [
             'order' => $order,
             'payment' => $order->payments->sortByDesc('id')->first(),
+            'paymentMethod' => PaymentMethodCatalog::get($order->payment_method),
         ]);
     }
 

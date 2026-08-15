@@ -24,8 +24,10 @@ class CalculateCheckoutTotalsAction
         Cart $cart,
         ShippingAddressData $address,
         ?string $discountCode = null,
+        ?string $shippingOption = null,
         bool $lockForUpdate = false,
         bool $ignoreInvalidDiscount = false,
+        bool $includeShippingOptions = false,
     ): CheckoutTotalsData {
         $cartItemsQuery = CartItem::query()
             ->where('cart_id', $cart->getKey())
@@ -96,7 +98,7 @@ class CalculateCheckoutTotalsAction
             $totalWeightGrams += $weightGrams;
         }
 
-        $shippingQuote = $this->resolveShippingQuote->execute($address, $totalWeightGrams);
+        $shippingQuote = $this->resolveShippingQuote->execute($address, $totalWeightGrams, $shippingOption);
 
         try {
             $discount = $this->calculatePromotionDiscount->execute($discountCode, $subtotal, $lockForUpdate);
@@ -114,6 +116,7 @@ class CalculateCheckoutTotalsAction
             lines: $lines,
             subtotal: $subtotal,
             shipping: $shippingQuote,
+            shippingOptions: $includeShippingOptions ? $this->resolveShippingQuote->all($address, $totalWeightGrams) : [],
             discount: $discount,
             total: $subtotal + $shippingQuote->fee - $discount->amount,
         );

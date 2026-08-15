@@ -3,6 +3,8 @@
 namespace App\Modules\Customers\Actions;
 
 use App\Models\User;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class UpdateManagedUserAction
@@ -28,7 +30,13 @@ class UpdateManagedUserAction
             ]);
         }
 
-        $user->update($validated);
+        $attributes = Arr::only($validated, ['name', 'email', 'phone', 'role', 'is_active']);
+
+        if (filled($validated['password'] ?? null)) {
+            $attributes['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($attributes);
 
         return $user->fresh();
     }

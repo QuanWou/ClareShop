@@ -2,6 +2,8 @@
 
 namespace App\Modules\Orders\Http\Requests;
 
+use App\Modules\Orders\Support\PaymentMethodCatalog;
+
 class CreateCheckoutOrderRequest extends QuoteCheckoutRequest
 {
     public function rules(): array
@@ -10,7 +12,7 @@ class CreateCheckoutOrderRequest extends QuoteCheckoutRequest
             ...parent::rules(),
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:30'],
-            'payment_method' => ['required', 'string', 'in:cod,bank_transfer'],
+            'payment_method' => ['required', 'string', 'in:'.implode(',', PaymentMethodCatalog::codes())],
             'customer_note' => ['nullable', 'string', 'max:2000'],
         ];
     }

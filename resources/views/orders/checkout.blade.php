@@ -1,7 +1,12 @@
 @extends('layouts.storefront', [
     'title' => 'Checkout',
-    'description' => 'Hoàn tất đơn hàng Clare bằng COD hoặc chuyển khoản VietQR.',
+    'description' => 'Hoàn tất đơn hàng Clare với lựa chọn vận chuyển và thanh toán phù hợp.',
 ])
+
+@php
+    $selectedShippingOption = old('shipping_option', $defaultShippingOption);
+    $selectedPaymentMethod = old('payment_method', 'cod');
+@endphp
 
 @section('content')
     <section class="checkout-page section" aria-labelledby="checkout-title">
@@ -19,7 +24,7 @@
                     <p class="eyebrow">Bước cuối cùng</p>
                     <h1 id="checkout-title">Hoàn tất<br>đơn hàng.</h1>
                 </div>
-                <p>Đơn hàng được gắn với tài khoản Clare của bạn. Phí vận chuyển được ước tính theo địa chỉ và trọng lượng đơn.</p>
+                <p>Đơn hàng được gắn với tài khoản Clare của bạn. Chọn đơn vị vận chuyển, xem phí ước tính theo địa chỉ và chốt phương thức thanh toán phù hợp.</p>
             </div>
 
             <form
@@ -101,6 +106,32 @@
                         </div>
 
                         <input name="shipping_country_code" type="hidden" value="VN" data-shipping-field>
+
+                        <div class="checkout-shipping-options" aria-labelledby="checkout-shipping-option-title">
+                            <div class="checkout-shipping-options-heading">
+                                <div>
+                                    <p class="eyebrow">Chọn đơn vị</p>
+                                    <h3 id="checkout-shipping-option-title">Phương án giao hàng</h3>
+                                </div>
+                                <p>Phí và ngày giao thay đổi theo địa chỉ, khối lượng và đơn vị bạn chọn.</p>
+                            </div>
+
+                            <div class="shipping-methods">
+                                @foreach ($shippingOptions as $shippingOption)
+                                    <label class="shipping-method" data-shipping-option-card="{{ $shippingOption['code'] }}">
+                                        <input name="shipping_option" type="radio" value="{{ $shippingOption['code'] }}" @checked($selectedShippingOption === $shippingOption['code']) data-shipping-option>
+                                        <span class="shipping-method-copy">
+                                            <strong>{{ $shippingOption['label'] }}</strong>
+                                            <small>{{ $shippingOption['service'] }} · {{ $shippingOption['description'] }}</small>
+                                        </span>
+                                        <span class="shipping-method-quote">
+                                            <strong data-shipping-option-price="{{ $shippingOption['code'] }}">Nhập địa chỉ</strong>
+                                            <small data-shipping-option-eta="{{ $shippingOption['code'] }}">để xem phí</small>
+                                        </span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
                     </section>
 
                     <section class="checkout-section" aria-labelledby="checkout-payment-title">
@@ -108,21 +139,18 @@
                         <h2 id="checkout-payment-title">Chọn phương thức</h2>
 
                         <div class="payment-methods">
-                            <label class="payment-method">
-                                <input name="payment_method" type="radio" value="cod" @checked(old('payment_method', 'cod') === 'cod')>
-                                <span>
-                                    <strong>Thanh toán khi nhận hàng</strong>
-                                    <small>Thanh toán trực tiếp khi đơn được giao.</small>
-                                </span>
-                            </label>
-
-                            <label class="payment-method">
-                                <input name="payment_method" type="radio" value="bank_transfer" @checked(old('payment_method') === 'bank_transfer')>
-                                <span>
-                                    <strong>Chuyển khoản qua VietQR</strong>
-                                    <small>Mã QR đúng số tiền và nội dung chuyển khoản sẽ hiện sau khi đặt đơn.</small>
-                                </span>
-                            </label>
+                            @foreach ($paymentMethods as $code => $paymentMethod)
+                                <label class="payment-method">
+                                    <input name="payment_method" type="radio" value="{{ $code }}" @checked($selectedPaymentMethod === $code)>
+                                    <span>
+                                        <strong>{{ $paymentMethod['label'] }}</strong>
+                                        <small>{{ $paymentMethod['description'] }}</small>
+                                        @if ($paymentMethod['is_simulated'])
+                                            <small class="payment-method-pending">Chờ kết nối cổng thanh toán/đối tác chính thức.</small>
+                                        @endif
+                                    </span>
+                                </label>
+                            @endforeach
                         </div>
 
                         <label class="checkout-field checkout-note-field">
@@ -177,6 +205,10 @@
 
                     <dl class="checkout-shipping-details" hidden data-checkout-shipping-details>
                         <div>
+                            <dt>Đơn vị vận chuyển</dt>
+                            <dd data-checkout-shipping-provider>—</dd>
+                        </div>
+                        <div>
                             <dt>Dịch vụ</dt>
                             <dd data-checkout-shipping-service>—</dd>
                         </div>
@@ -190,10 +222,10 @@
                         </div>
                     </dl>
 
-                    <p class="checkout-quote-status" aria-live="polite" data-checkout-quote-status>Hoàn thiện địa chỉ để hệ thống tính phí ship, ngày nhận dự kiến và kiểm tra mã ưu đãi.</p>
-                    <button class="checkout-quote-button" type="button" data-checkout-quote>Tính phí ship và áp dụng ưu đãi</button>
+                    <p class="checkout-quote-status" aria-live="polite" data-checkout-quote-status>Hoàn thiện địa chỉ để so sánh phí GHN, GHTK, J&amp;T Express, xem ngày nhận dự kiến và kiểm tra mã ưu đãi.</p>
+                    <button class="checkout-quote-button" type="button" data-checkout-quote>So sánh phí giao hàng và áp dụng ưu đãi</button>
                     <button class="button button-primary button-wide" type="submit">Đặt đơn hàng</button>
-                    <p class="checkout-security-note">Phí ship hiện là ước tính nội bộ theo địa chỉ và khối lượng; chưa phải báo giá của GHN/GHTK. Tổng tiền và ưu đãi luôn được tính lại tại máy chủ khi đặt đơn.</p>
+                    <p class="checkout-security-note">Phí ship hiện là ước tính nội bộ theo địa chỉ, khối lượng và đơn vị đã chọn; chưa phải báo giá chính thức của GHN, GHTK hoặc J&amp;T Express. Tổng tiền và ưu đãi luôn được tính lại tại máy chủ khi đặt đơn.</p>
                 </aside>
             </form>
         </div>

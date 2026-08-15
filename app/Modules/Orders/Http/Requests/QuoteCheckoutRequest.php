@@ -3,7 +3,9 @@
 namespace App\Modules\Orders\Http\Requests;
 
 use App\Modules\Orders\Http\Requests\Concerns\HasShippingAddressRules;
+use App\Modules\Orders\Support\ShippingOptionCatalog;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class QuoteCheckoutRequest extends FormRequest
 {
@@ -14,10 +16,18 @@ class QuoteCheckoutRequest extends FormRequest
         return $this->user()?->is_active === true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('shipping_option')) {
+            $this->merge(['shipping_option' => ShippingOptionCatalog::defaultCode()]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             ...$this->shippingAddressRules(),
+            'shipping_option' => ['required', 'string', Rule::in(ShippingOptionCatalog::codes())],
             'discount_code' => ['nullable', 'string', 'max:50'],
         ];
     }

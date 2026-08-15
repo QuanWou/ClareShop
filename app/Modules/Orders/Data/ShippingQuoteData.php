@@ -22,6 +22,7 @@ readonly class ShippingQuoteData
     public function toArray(): array
     {
         return [
+            'option' => $this->payload['shipping_option'] ?? null,
             'provider' => $this->provider,
             'service' => $this->service,
             'quote_id' => $this->quoteId,

@@ -514,6 +514,71 @@ class AdminOperationsTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_update_and_safely_delete_a_customer_account(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->post(route('admin.users.store'), [
+                'name' => 'Trần Bảo Ngọc',
+                'email' => 'bao.ngoc@example.test',
+                'phone' => '0901234567',
+                'password' => 'Matkhau123',
+                'password_confirmation' => 'Matkhau123',
+                'role' => 'customer',
+                'is_active' => true,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $user = User::query()->where('email', 'bao.ngoc@example.test')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.update', $user), [
+                'name' => 'Trần Bảo Ngọc Mới',
+                'email' => 'bao.ngoc.moi@example.test',
+                'phone' => '0912345678',
+                'password' => 'Matkhau456',
+                'password_confirmation' => 'Matkhau456',
+                'role' => 'customer',
+                'is_active' => true,
+            ])
+            ->assertRedirect(route('admin.users.edit', $user))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->getKey(),
+            'name' => 'Trần Bảo Ngọc Mới',
+            'email' => 'bao.ngoc.moi@example.test',
+            'phone' => '0912345678',
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.users.destroy', $user), ['delete_confirmation' => true])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSoftDeleted('users', ['id' => $user->getKey()]);
+        $this->assertDatabaseHas('users', [
+            'id' => $user->getKey(),
+            'name' => 'Tài khoản đã xóa',
+            'is_active' => false,
+        ]);
+    }
+
+    public function test_admin_cannot_delete_the_account_used_for_the_current_session(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->from(route('admin.users.edit', $admin))
+            ->delete(route('admin.users.destroy', $admin), ['delete_confirmation' => true])
+            ->assertRedirect(route('admin.users.edit', $admin))
+            ->assertSessionHasErrors('account_deletion');
+
+        $this->assertNotSoftDeleted('users', ['id' => $admin->getKey()]);
+    }
+
     private function admin(): User
     {
         return User::factory()->create([

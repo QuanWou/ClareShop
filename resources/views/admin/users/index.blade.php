@@ -2,7 +2,7 @@
 
 @section('content')
     <section class="admin-page" aria-labelledby="admin-users-title">
-        <div class="admin-page-heading"><div><p class="admin-eyebrow">Khách hàng &amp; quyền truy cập</p><h1 id="admin-users-title">Tài khoản.</h1></div><p>Quản lý trạng thái hoạt động và quyền quản trị. Mật khẩu, email và dữ liệu cá nhân không được thay đổi từ màn vận hành này.</p></div>
+        <div class="admin-page-heading"><div><p class="admin-eyebrow">Khách hàng &amp; quyền truy cập</p><h1 id="admin-users-title">Tài khoản.</h1></div><div class="admin-page-heading-actions"><p>Tạo mới, cập nhật hồ sơ, thay đổi quyền và xóa an toàn từng tài khoản. Lịch sử đơn hàng luôn được bảo toàn.</p><a class="admin-primary-link" href="{{ route('admin.users.create') }}">Thêm tài khoản</a></div></div>
 
         <form class="admin-filters" method="GET" action="{{ route('admin.users.index') }}">
             <label><span>Tìm kiếm</span><input name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Tên, email hoặc số điện thoại"></label>

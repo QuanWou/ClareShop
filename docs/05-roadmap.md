@@ -53,7 +53,7 @@
 2. Đã tạo schema `orders`, `order_items`, `order_status_histories`, `payments`, `inventory_movements`; biến thể có thêm trọng lượng đóng gói.
 3. Đã có Checkout API báo giá vận chuyển động theo địa chỉ/tổng trọng lượng và tạo đơn trong transaction; chỉ tài khoản đang hoạt động được dùng checkout, API snapshot sản phẩm/giá, trừ tồn và ghi inventory movement.
 4. Đã trả về QR VietQR động cho chuyển khoản, có `amount` đúng theo server và `addInfo` bằng mã đơn; trạng thái vẫn là `pending` chờ đối soát.
-5. Đã có UI Checkout/xác nhận đơn và back office cho luồng trạng thái đơn, xác nhận/hoàn thanh toán thủ công và hoàn tồn kho khi hủy. Cần adapter GHN/GHTK thật và webhook đối soát chuyển khoản.
+5. Đã có UI Checkout/xác nhận đơn và back office cho luồng trạng thái đơn, xác nhận/hoàn thanh toán thủ công và hoàn tồn kho khi hủy. Checkout cho phép so sánh/chọn quote ước tính của GHN, GHTK hoặc J&T Express; hỗ trợ COD, VietQR, MoMo, thẻ ngân hàng và trả sau. Cần adapter vận chuyển thật, merchant gateway và webhook đối soát trước khi gọi các quote/thanh toán là chính thức.
 6. Đã có mã ưu đãi server-side và màn quản trị mã: một mã/đơn, snapshot audit, thời hạn, điều kiện đơn tối thiểu, mức giảm tối đa, giới hạn lượt dùng và bật/tắt. ETA/mã theo dõi hiện là mô phỏng nội bộ cho đến khi có adapter vận chuyển thật.
 
 ## Phase 5 — Consultation và installation

@@ -21,7 +21,7 @@
 7. Cart không giữ tồn kho; mọi thao tác thêm/cập nhật phải kiểm tra lại sản phẩm, biến thể và số lượng tồn hiện tại ở server.
 8. Checkout lấy email liên hệ snapshot từ tài khoản đã xác thực ở server; chỉ nhận tên, số điện thoại, địa chỉ và phương thức thanh toán từ form. Subtotal, phí giao hàng và total đều phải tính lại tại server.
 9. Mỗi biến thể có `weight_grams`. Checkout cộng trọng lượng các dòng để báo giá vận chuyển và lưu snapshot quote vào order.
-10. Khi chưa có adapter/credentials của GHN hoặc GHTK, phí ship là **ước tính động** và phải được đánh dấu rõ là ước tính; không được gọi đó là báo giá chính thức của hãng vận chuyển.
+10. Khách chọn một đơn vị vận chuyển trong GHN, GHTK hoặc J&T Express. Khi chưa có adapter/credentials, mỗi mức phí và ETA là **ước tính động nội bộ** theo địa chỉ, tổng trọng lượng và cấu hình riêng của đơn vị; không được gọi đó là báo giá chính thức của hãng vận chuyển.
 11. Trang xác nhận đơn cần signed URL tạm thời **và** yêu cầu người xem đang đăng nhập đúng tài khoản sở hữu đơn.
 12. V1 cho phép tối đa một mã ưu đãi cho mỗi đơn. Mã chỉ giảm `subtotal` tiền hàng, không giảm `shipping_fee`; tổng luôn là `subtotal + shipping_fee - discount_total` và được tính lại trong transaction tạo đơn.
 13. Mã ưu đãi phải còn hiệu lực, đang bật, chưa quá lượt dùng và thỏa giá trị đơn tối thiểu. Lượt dùng chỉ tăng sau khi tạo đơn thành công; nếu đơn được hủy hợp lệ, lượt đó được hoàn một lần cùng transaction hoàn tồn kho.
@@ -45,10 +45,11 @@ unpaid | pending | paid | refunded
 
 Không được đánh dấu thanh toán thành công hay báo giá hãng vận chuyển thật khi chưa có dữ liệu đối soát hoặc phản hồi API tương ứng.
 
-V1 đã chốt hai phương thức:
+V1 có năm phương thức thanh toán:
 
 - `cod`: đơn và payment ở trạng thái `unpaid`.
 - `bank_transfer`: tạo Quick Link VietQR với đúng `amount` và `addInfo` bằng mã đơn; đơn/payment phải ở trạng thái `pending` cho đến khi có đối soát hoặc webhook xác nhận. Tạo QR không đồng nghĩa thanh toán thành công.
+- `momo`, `bank_card`, `pay_later`: ghi nhận lựa chọn và tạo payment ở trạng thái `pending`. Khi chưa có merchant credentials/gateway phù hợp, checkout phải ghi rõ đây là luồng mô phỏng chờ tích hợp và không được thu thập số thẻ, tự duyệt trả sau hoặc đánh dấu đã thanh toán.
 
 ## Vận hành quản trị
 

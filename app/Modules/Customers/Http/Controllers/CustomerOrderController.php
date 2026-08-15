@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Customers\Actions\ShowCustomerOrderAction;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Orders\Support\PaymentMethodCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -20,6 +21,7 @@ class CustomerOrderController extends Controller
         return view('customers.orders.show', [
             'order' => $order,
             'payment' => $order->payments->sortByDesc('id')->first(),
+            'paymentMethod' => PaymentMethodCatalog::get($order->payment_method),
         ]);
     }
 }

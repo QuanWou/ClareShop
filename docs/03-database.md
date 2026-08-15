@@ -171,12 +171,12 @@ Ràng buộc unique: `cart_id + product_variant_id`. Cart không lưu giá snaps
 | `number` | varchar(32), unique | Mã khách nhìn thấy, ví dụ `CLR-...` |
 | `user_id` | nullable FK → `users`, `SET NULL`, indexed | Mọi đơn mới phải có user; nullable chỉ giữ được các dữ liệu lịch sử từ trước khi áp dụng checkout đăng nhập |
 | `status` | varchar(30), indexed | `pending`, `confirmed`, `processing`, `shipped`, `completed`, `cancelled` |
-| `payment_method` | varchar(30), nullable | Chỉ set sau khi chốt phương thức thanh toán |
+| `payment_method` | varchar(30), nullable | `cod`, `bank_transfer`, `momo`, `bank_card` hoặc `pay_later`; chỉ set sau khi khách chốt phương thức |
 | `payment_status` | varchar(30), indexed | `unpaid`, `pending`, `paid`, `refunded` |
 | `currency` | char(3) | Đơn vị tiền do cấu hình bán hàng quyết định |
 | `customer_name`, `customer_email`, `customer_phone` | varchar | Snapshot liên hệ đặt hàng |
 | shipping fields | `shipping_recipient_name`, `shipping_phone`, `shipping_address_line_1`, `shipping_address_line_2`, `shipping_ward`, `shipping_district`, `shipping_city`, `shipping_postal_code`, `shipping_country_code` | Snapshot giao hàng, không phụ thuộc địa chỉ account |
-| shipping quote fields | `shipping_provider`, `shipping_service`, `shipping_quote_id`, `shipping_quote_payload`, `shipping_total_weight_grams`, `shipping_estimated_days`, `shipping_fee_is_estimated` | Quote vận chuyển và dữ liệu cần thiết để thay adapter GHN/GHTK sau này |
+| shipping quote fields | `shipping_provider`, `shipping_service`, `shipping_quote_id`, `shipping_quote_payload`, `shipping_total_weight_grams`, `shipping_estimated_days`, `shipping_fee_is_estimated` | Snapshot lựa chọn GHN/GHTK/J&T Express, quote và dữ liệu cần thiết để thay adapter thật sau này |
 | `subtotal`, `shipping_fee`, `discount_total`, `total` | decimal(12,2) | Tất cả do server tính |
 | `customer_note`, `admin_note`, `cancel_reason` | text nullable | Ghi chú khách/nội bộ/lý do hủy |
 | `placed_at`, `confirmed_at`, `cancelled_at` | timestamp nullable, indexed khi cần | Mốc nghiệp vụ |

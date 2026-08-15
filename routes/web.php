@@ -103,8 +103,11 @@ Route::prefix('admin')->as('admin.')->middleware(['auth', 'admin'])->group(funct
     Route::patch('/promotions/{promotion}', [AdminPromotionCodeController::class, 'update'])->name('promotions.update');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
     Route::get('/content', [AdminSiteContentController::class, 'edit'])->name('content.edit');
     Route::patch('/content', [AdminSiteContentController::class, 'update'])->name('content.update');

@@ -119,6 +119,17 @@ class Order extends Model
         };
     }
 
+    public function paymentStatusLabel(): string
+    {
+        return match ($this->payment_status) {
+            'unpaid' => 'Chưa thanh toán',
+            'pending' => 'Chờ thanh toán/xét duyệt',
+            'paid' => 'Đã thanh toán',
+            'refunded' => 'Đã hoàn tiền',
+            default => $this->payment_status,
+        };
+    }
+
     public function estimatedDeliveryDate(): ?Carbon
     {
         if ($this->estimated_delivery_at instanceof Carbon) {

@@ -40,7 +40,13 @@ class CheckoutWebTest extends TestCase
             ->assertOk()
             ->assertSee('Hoàn tất đơn hàng')
             ->assertSee('Ru Đêm')
+            ->assertSee('Giao Hàng Nhanh (GHN)')
+            ->assertSee('Giao Hàng Tiết Kiệm (GHTK)')
+            ->assertSee('J&amp;T Express', false)
             ->assertSee('Chuyển khoản qua VietQR')
+            ->assertSee('Ví MoMo')
+            ->assertSee('Thẻ ngân hàng')
+            ->assertSee('Mua trước, trả sau')
             ->assertSee('Ngày nhận dự kiến')
             ->assertSee('Cách tính')
             ->assertSee($customer->email)
@@ -104,6 +110,34 @@ class CheckoutWebTest extends TestCase
         $this->assertDatabaseHas('orders', [
             'payment_method' => 'cod',
             'payment_status' => 'unpaid',
+        ]);
+    }
+
+    public function test_web_checkout_records_momo_as_pending_without_claiming_it_was_paid(): void
+    {
+        $customer = $this->customer();
+        $variant = ProductVariant::query()->where('sku', 'CLR-TM-OLIVE')->firstOrFail();
+        $cart = $this->createGuestCartWithItem($variant);
+
+        $response = $this->actingAs($customer)
+            ->withCookie(config('commerce.cart.cookie'), $cart->guest_token)
+            ->post(route('checkout.store'), [
+                ...$this->shippingAddress(),
+                'shipping_option' => 'ghtk',
+                'customer_name' => 'Lê Mai',
+                'customer_phone' => '0901234568',
+                'payment_method' => 'momo',
+            ]);
+
+        $this->get($response->headers->get('Location'))
+            ->assertOk()
+            ->assertSee('Đang chờ khởi tạo thanh toán MoMo.')
+            ->assertSee('Chưa có giao dịch tiền thật nào được tạo hoặc xác nhận.');
+
+        $this->assertDatabaseHas('orders', [
+            'payment_method' => 'momo',
+            'payment_status' => 'pending',
+            'shipping_provider' => 'Giao Hàng Tiết Kiệm (GHTK)',
         ]);
     }
 

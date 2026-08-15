@@ -18,7 +18,7 @@
             </div>
 
             <figure class="hero-visual" data-reveal data-reveal-immediate>
-                <div class="hero-visual-media">
+                <div class="hero-visual-media" data-lamp-scene>
                     <img
                         src="{{ $siteContent->asset('home_hero_image') }}"
                         alt="{{ $siteContent->get('home_hero_image_alt') }}"
@@ -26,6 +26,19 @@
                         height="1024"
                         data-parallax="18"
                     >
+                    <span class="hero-lamp-light" aria-hidden="true"></span>
+                    <button
+                        class="hero-pull-cord"
+                        type="button"
+                        aria-pressed="false"
+                        aria-label="Kéo dây để bật đèn"
+                        aria-describedby="hero-lamp-instruction"
+                        data-lamp-toggle
+                    >
+                        <span class="hero-pull-cord-handle" aria-hidden="true"></span>
+                    </button>
+                    <p class="hero-lamp-instruction" id="hero-lamp-instruction" data-lamp-instruction>Kéo dây để bật đèn</p>
+                    <span class="sr-only" aria-live="polite" data-lamp-status>Đèn đang tắt.</span>
                     <span class="hero-visual-note">{{ $siteContent->get('home_hero_note') }}</span>
                     <span class="hero-visual-index" aria-hidden="true">01</span>
                 </div>

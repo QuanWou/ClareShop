@@ -36,9 +36,12 @@
                 </section>
             @else
                 <section class="order-payment-note">
-                    <p class="eyebrow">Thanh toán khi nhận hàng</p>
-                    <h2>Thanh toán khi đơn được giao.</h2>
-                    <p>Vui lòng chuẩn bị <strong>{{ \App\Modules\Shared\Support\Money::formatVnd($order->total) }}</strong> khi nhận hàng.</p>
+                    <p class="eyebrow">{{ $paymentMethod['label'] }}</p>
+                    <h2>{{ $paymentMethod['confirmation_title'] }}</h2>
+                    <p>{{ $paymentMethod['confirmation_description'] }} Tổng tiền hiện tại là <strong>{{ \App\Modules\Shared\Support\Money::formatVnd($order->total) }}</strong>.</p>
+                    @if ($paymentMethod['is_simulated'])
+                        <p class="order-payment-pending">Trạng thái hiện tại: <strong>{{ $order->paymentStatusLabel() }}</strong>. Chưa có giao dịch tiền thật nào được tạo hoặc xác nhận.</p>
+                    @endif
                 </section>
             @endif
 
@@ -68,7 +71,8 @@
 
                 <p class="order-shipping-note">
                     Giao đến {{ $order->shipping_recipient_name }} · {{ $order->shipping_phone }}<br>
-                    {{ $order->shipping_address_line_1 }}@if($order->shipping_address_line_2), {{ $order->shipping_address_line_2 }}@endif, {{ $order->shipping_ward }}, {{ $order->shipping_district }}, {{ $order->shipping_city }}.
+                    {{ $order->shipping_address_line_1 }}@if($order->shipping_address_line_2), {{ $order->shipping_address_line_2 }}@endif, {{ $order->shipping_ward }}, {{ $order->shipping_district }}, {{ $order->shipping_city }}.<br>
+                    Đơn vị vận chuyển: <strong>{{ $order->shipping_provider ?? 'Ước tính nội bộ' }} · {{ $order->shipping_service ?? 'Giao tiêu chuẩn' }}</strong>@if($order->shipping_fee_is_estimated) <span>· phí giao là ước tính nội bộ</span>@endif
                 </p>
             </section>
 

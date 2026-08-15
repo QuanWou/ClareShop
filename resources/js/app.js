@@ -95,6 +95,93 @@ const cartCount = document.querySelector('[data-cart-count]');
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 const motionIsReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+document.querySelectorAll('[data-lamp-toggle]').forEach((control) => {
+    const scene = control.closest('[data-lamp-scene]');
+    const instruction = scene?.querySelector('[data-lamp-instruction]');
+    const status = scene?.querySelector('[data-lamp-status]');
+
+    if (!scene || !instruction || !status) {
+        return;
+    }
+
+    let isLit = false;
+    let activePointerId;
+    let pullStartY = 0;
+    let furthestPull = 0;
+    let ignoreNextClick = false;
+
+    const updateLamp = (nextState) => {
+        isLit = nextState;
+        scene.classList.toggle('is-lamp-on', isLit);
+        control.setAttribute('aria-pressed', isLit ? 'true' : 'false');
+        control.setAttribute('aria-label', isLit ? 'Kéo dây để tắt đèn' : 'Kéo dây để bật đèn');
+        instruction.textContent = isLit ? 'Đèn đã bật · Kéo dây để tắt' : 'Kéo dây để bật đèn';
+        status.textContent = isLit ? 'Đèn đã bật. Kéo dây lần nữa để tắt.' : 'Đèn đã tắt. Kéo dây để bật.';
+    };
+
+    const resetCord = () => {
+        scene.classList.remove('is-pulling');
+        control.style.removeProperty('--lamp-pull-distance');
+    };
+
+    const finishPull = (event, shouldToggle) => {
+        if (event.pointerId !== activePointerId) {
+            return;
+        }
+
+        const didPull = furthestPull >= 34;
+
+        if (control.hasPointerCapture(event.pointerId)) {
+            control.releasePointerCapture(event.pointerId);
+        }
+
+        activePointerId = undefined;
+        resetCord();
+
+        if (shouldToggle && didPull) {
+            updateLamp(!isLit);
+            ignoreNextClick = true;
+        }
+    };
+
+    control.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) {
+            return;
+        }
+
+        activePointerId = event.pointerId;
+        pullStartY = event.clientY;
+        furthestPull = 0;
+        control.setPointerCapture(event.pointerId);
+        scene.classList.add('is-pulling');
+    });
+
+    control.addEventListener('pointermove', (event) => {
+        if (event.pointerId !== activePointerId) {
+            return;
+        }
+
+        const pullDistance = Math.max(0, Math.min(event.clientY - pullStartY, 92));
+        furthestPull = Math.max(furthestPull, pullDistance);
+        control.style.setProperty('--lamp-pull-distance', `${pullDistance}px`);
+    });
+
+    control.addEventListener('pointerup', (event) => finishPull(event, true));
+    control.addEventListener('pointercancel', (event) => finishPull(event, false));
+
+    control.addEventListener('click', () => {
+        if (ignoreNextClick) {
+            ignoreNextClick = false;
+
+            return;
+        }
+
+        updateLamp(!isLit);
+    });
+
+    updateLamp(false);
+});
+
 const updateCartSummary = (count) => {
     if (!cartPreview || !cartCount) {
         return;
@@ -395,9 +482,13 @@ if (checkoutForm) {
     const quoteStatus = checkoutForm.querySelector('[data-checkout-quote-status]');
     const discountCode = checkoutForm.querySelector('[data-checkout-discount-code]');
     const shippingDetails = checkoutForm.querySelector('[data-checkout-shipping-details]');
+    const shippingProvider = checkoutForm.querySelector('[data-checkout-shipping-provider]');
     const shippingService = checkoutForm.querySelector('[data-checkout-shipping-service]');
     const shippingWeight = checkoutForm.querySelector('[data-checkout-shipping-weight]');
     const shippingRule = checkoutForm.querySelector('[data-checkout-shipping-rule]');
+    const shippingOptionInputs = checkoutForm.querySelectorAll('[data-shipping-option]');
+    const shippingOptionPrices = checkoutForm.querySelectorAll('[data-shipping-option-price]');
+    const shippingOptionEtas = checkoutForm.querySelectorAll('[data-shipping-option-eta]');
     const initialTotal = orderTotal?.textContent ?? '';
     let quoteTimer;
     let activeQuoteRequest;
@@ -422,6 +513,12 @@ if (checkoutForm) {
         discountTotal.textContent = '—';
         orderTotal.textContent = initialTotal;
         shippingDetails.hidden = true;
+        shippingOptionPrices.forEach((price) => {
+            price.textContent = 'Nhập địa chỉ';
+        });
+        shippingOptionEtas.forEach((eta) => {
+            eta.textContent = 'để xem phí';
+        });
         quoteStatus.textContent = message;
     };
 
@@ -452,10 +549,24 @@ if (checkoutForm) {
         shippingTotal.textContent = shipping.fee_formatted;
         deliveryEstimate.textContent = shipping.estimated_delivery_date_formatted ?? shipping.estimated_days_label ?? 'Đang cập nhật';
         orderTotal.textContent = data.total_formatted;
+        shippingProvider.textContent = shipping.provider;
         shippingService.textContent = shipping.service;
         shippingWeight.textContent = `${shipping.total_weight_grams.toLocaleString('vi-VN')} g`;
         shippingRule.textContent = shippingRuleCopy(shipping);
         shippingDetails.hidden = false;
+
+        (data.shipping_options ?? []).forEach((option) => {
+            const price = checkoutForm.querySelector(`[data-shipping-option-price="${option.option}"]`);
+            const eta = checkoutForm.querySelector(`[data-shipping-option-eta="${option.option}"]`);
+
+            if (price) {
+                price.textContent = option.fee_formatted;
+            }
+
+            if (eta) {
+                eta.textContent = option.estimated_delivery_date_formatted ?? option.estimated_days_label ?? 'Đang cập nhật';
+            }
+        });
 
         if (discount.applied) {
             discountTotal.textContent = `-${discount.amount_formatted}`;
@@ -471,7 +582,7 @@ if (checkoutForm) {
         const etaCopy = shipping.estimated_delivery_date_formatted
             ? `Nhận dự kiến ${shipping.estimated_delivery_date_formatted}.`
             : 'Ngày nhận dự kiến đang được cập nhật.';
-        quoteStatus.textContent = `${etaCopy} Phí ship là ước tính nội bộ, chưa phải báo giá của đơn vị vận chuyển.`;
+        quoteStatus.textContent = `${shipping.provider} đã được chọn. ${etaCopy} Phí ship là ước tính nội bộ, chưa phải báo giá chính thức của đơn vị vận chuyển.`;
     };
 
     const quoteShipping = async ({ reportValidity = false } = {}) => {
@@ -491,6 +602,7 @@ if (checkoutForm) {
             [...shippingFields].map((field) => [field.name, values.get(field.name) ?? '']),
         );
         address.discount_code = discountCode?.value ?? '';
+        address.shipping_option = checkoutForm.querySelector('[data-shipping-option]:checked')?.value ?? '';
 
         quoteButton.disabled = true;
         quoteStatus.textContent = 'Đang tính phí ship, ngày nhận dự kiến và kiểm tra ưu đãi…';
@@ -551,6 +663,13 @@ if (checkoutForm) {
     shippingFields.forEach((field) => {
         field.addEventListener('input', () => {
             resetQuote('Thông tin giao hàng đã thay đổi. Hệ thống sẽ tính lại phí ship và ngày nhận dự kiến.');
+            scheduleQuote();
+        });
+    });
+
+    shippingOptionInputs.forEach((input) => {
+        input.addEventListener('change', () => {
+            resetQuote('Đơn vị vận chuyển đã thay đổi. Hệ thống sẽ tính lại phí ship và ngày nhận dự kiến.');
             scheduleQuote();
         });
     });

@@ -36,26 +36,29 @@ class CheckoutApiTest extends TestCase
             ->withCredentials()
             ->postJson(route('checkout.quote'), $this->shippingAddress());
 
-        $expectedShippingFee = config('checkout.shipping.estimate.base_fee')
+        $shippingOption = config('checkout.shipping.providers.ghn');
+        $expectedShippingFee = $shippingOption['base_fee']
             + (int) ceil(
-                max(0, $variant->weight_grams - config('checkout.shipping.estimate.included_weight_grams'))
-                / config('checkout.shipping.estimate.additional_weight_block_grams'),
-            ) * config('checkout.shipping.estimate.additional_weight_fee');
+                max(0, $variant->weight_grams - $shippingOption['included_weight_grams'])
+                / $shippingOption['additional_weight_block_grams'],
+            ) * $shippingOption['additional_weight_fee'];
         $expectedAdditionalBlocks = (int) ceil(
-            max(0, $variant->weight_grams - config('checkout.shipping.estimate.included_weight_grams'))
-            / config('checkout.shipping.estimate.additional_weight_block_grams'),
+            max(0, $variant->weight_grams - $shippingOption['included_weight_grams'])
+            / $shippingOption['additional_weight_block_grams'],
         );
 
         $response
             ->assertOk()
             ->assertJsonPath('data.subtotal', 1690000)
-            ->assertJsonPath('data.shipping.provider', 'clare_estimate')
+            ->assertJsonPath('data.shipping.option', 'ghn')
+            ->assertJsonPath('data.shipping.provider', 'Giao Hàng Nhanh (GHN)')
             ->assertJsonPath('data.shipping.total_weight_grams', $variant->weight_grams)
             ->assertJsonPath('data.shipping.fee', $expectedShippingFee)
-            ->assertJsonPath('data.shipping.calculation.base_fee', config('checkout.shipping.estimate.base_fee'))
+            ->assertJsonPath('data.shipping.calculation.base_fee', $shippingOption['base_fee'])
             ->assertJsonPath('data.shipping.calculation.additional_weight_blocks', $expectedAdditionalBlocks)
             ->assertJsonPath('data.shipping.calculation.is_urban_destination', true)
             ->assertJsonPath('data.shipping.is_estimated', true)
+            ->assertJsonCount(3, 'data.shipping_options')
             ->assertJsonPath('data.total', 1690000 + $expectedShippingFee);
     }
 
@@ -171,6 +174,83 @@ class CheckoutApiTest extends TestCase
             ->assertJsonPath('data.payment.vietqr', null);
     }
 
+    public function test_checkout_returns_and_snapshots_the_customer_selected_shipping_option(): void
+    {
+        $customer = $this->customer();
+        $variant = ProductVariant::query()->where('sku', 'CLR-HH-BRONZE')->firstOrFail();
+        $cart = $this->createGuestCartWithItem($variant, 1);
+
+        $this->actingAs($customer)
+            ->withCookie(config('commerce.cart.cookie'), $cart->guest_token)
+            ->withCredentials()
+            ->postJson(route('checkout.quote'), [
+                ...$this->shippingAddress(),
+                'shipping_option' => 'jnt',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.shipping.option', 'jnt')
+            ->assertJsonPath('data.shipping.provider', 'J&T Express')
+            ->assertJsonPath('data.shipping.service', 'Tiêu chuẩn')
+            ->assertJsonCount(3, 'data.shipping_options');
+
+        $this->actingAs($customer)
+            ->withCookie(config('commerce.cart.cookie'), $cart->guest_token)
+            ->withCredentials()
+            ->postJson(route('checkout.orders.store'), [
+                ...$this->shippingAddress(),
+                'shipping_option' => 'jnt',
+                'customer_name' => 'Nguyễn Minh An',
+                'customer_phone' => '0901234567',
+                'payment_method' => 'cod',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.shipping.provider', 'J&T Express');
+
+        $this->assertDatabaseHas('orders', [
+            'shipping_provider' => 'J&T Express',
+            'shipping_service' => 'Tiêu chuẩn',
+            'shipping_fee_is_estimated' => true,
+        ]);
+    }
+
+    public function test_checkout_creates_pending_payment_records_for_momo_card_and_pay_later(): void
+    {
+        $methods = [
+            'momo' => 'momo',
+            'bank_card' => 'bank_card_gateway',
+            'pay_later' => 'pay_later_review',
+        ];
+
+        foreach ($methods as $method => $provider) {
+            $customer = User::factory()->create();
+            $variant = ProductVariant::query()->where('sku', 'CLR-TM-OLIVE')->firstOrFail();
+            $cart = $this->createGuestCartWithItem($variant, 1);
+
+            $response = $this->actingAs($customer)
+                ->withCookie(config('commerce.cart.cookie'), $cart->guest_token)
+                ->withCredentials()
+                ->postJson(route('checkout.orders.store'), [
+                    ...$this->shippingAddress(),
+                    'shipping_option' => 'ghtk',
+                    'customer_name' => 'Khách thử nghiệm',
+                    'customer_phone' => '0901234567',
+                    'payment_method' => $method,
+                ]);
+
+            $response
+                ->assertCreated()
+                ->assertJsonPath('data.order.payment_method', $method)
+                ->assertJsonPath('data.order.payment_status', 'pending')
+                ->assertJsonPath('data.payment.provider', $provider)
+                ->assertJsonPath('data.payment.status', 'pending')
+                ->assertJsonPath('data.payment.integration_status', 'pending_gateway_integration')
+                ->assertJsonPath('data.payment.vietqr', null);
+        }
+
+        $this->assertDatabaseCount('orders', 3);
+        $this->assertDatabaseCount('payments', 3);
+    }
+
     public function test_checkout_calculates_and_snapshots_an_eligible_promotion_code_on_the_server(): void
     {
         $customer = $this->customer();
@@ -232,6 +312,10 @@ class CheckoutApiTest extends TestCase
         $customer = $this->customer();
         $variant = ProductVariant::query()->where('sku', 'CLR-HH-BRONZE')->firstOrFail();
         $cart = $this->createGuestCartWithItem($variant, 1);
+        $ghn = config('checkout.shipping.providers.ghn');
+        $expectedShippingFee = $ghn['base_fee'] + (int) ceil(
+            max(0, $variant->weight_grams - $ghn['included_weight_grams']) / $ghn['additional_weight_block_grams'],
+        ) * $ghn['additional_weight_fee'];
         PromotionCode::query()->create([
             'code' => 'HETHAN',
             'name' => 'Mã đã hết hạn',
@@ -249,7 +333,7 @@ class CheckoutApiTest extends TestCase
                 'discount_code' => 'HETHAN',
             ])
             ->assertOk()
-            ->assertJsonPath('data.shipping.fee', 40000)
+            ->assertJsonPath('data.shipping.fee', $expectedShippingFee)
             ->assertJsonPath('data.discount.applied', false)
             ->assertJsonPath('data.discount.message', 'Mã ưu đãi hiện không còn hiệu lực.');
 

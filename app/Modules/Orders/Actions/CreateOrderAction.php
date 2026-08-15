@@ -10,6 +10,7 @@ use App\Modules\Orders\Data\ShippingAddressData;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderStatusHistory;
 use App\Modules\Orders\Models\PaymentStatusHistory;
+use App\Modules\Orders\Support\PaymentMethodCatalog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -39,9 +40,11 @@ class CreateOrderAction
                 cart: $lockedCart,
                 address: $address,
                 discountCode: $validated['discount_code'] ?? null,
+                shippingOption: $validated['shipping_option'],
                 lockForUpdate: true,
             );
-            $isBankTransfer = $validated['payment_method'] === 'bank_transfer';
+            $paymentMethod = PaymentMethodCatalog::get($validated['payment_method']);
+            $requiresVietQr = (bool) $paymentMethod['requires_vietqr'];
             $placedAt = now();
             $estimatedDeliveryAt = $this->calculateEstimatedDeliveryAt->execute($placedAt, $totals->shipping->estimatedDays);
 
@@ -50,7 +53,7 @@ class CreateOrderAction
                 'user_id' => $userId,
                 'status' => 'pending',
                 'payment_method' => $validated['payment_method'],
-                'payment_status' => $isBankTransfer ? 'pending' : 'unpaid',
+                'payment_status' => $paymentMethod['initial_status'],
                 'currency' => config('commerce.currency'),
                 'customer_name' => $validated['customer_name'],
                 'customer_email' => $customer->email,
@@ -115,14 +118,14 @@ class CreateOrderAction
                 'note' => 'Đơn hàng được tạo từ checkout.',
             ]);
 
-            $vietQr = $isBankTransfer ? $this->buildVietQrPayment->execute($order) : null;
+            $vietQr = $requiresVietQr ? $this->buildVietQrPayment->execute($order) : null;
             $payment = $order->payments()->create([
-                'provider' => $isBankTransfer ? 'vietqr' : 'cod',
-                'provider_reference' => $isBankTransfer ? $order->number : null,
+                'provider' => $paymentMethod['provider'],
+                'provider_reference' => $requiresVietQr ? $order->number : null,
                 'amount' => $order->total,
                 'currency' => $order->currency,
                 'status' => $order->payment_status,
-                'payload' => $vietQr?->toArray(),
+                'payload' => $vietQr?->toArray() ?? $this->paymentPayload($validated['payment_method'], $paymentMethod),
             ]);
 
             PaymentStatusHistory::query()->create([
@@ -152,5 +155,19 @@ class CreateOrderAction
         } while (Order::query()->where('number', $number)->exists());
 
         return $number;
+    }
+
+    /** @param array<string, mixed> $paymentMethod */
+    private function paymentPayload(string $paymentMethodCode, array $paymentMethod): ?array
+    {
+        if (! $paymentMethod['is_simulated']) {
+            return null;
+        }
+
+        return [
+            'payment_method' => $paymentMethodCode,
+            'integration_status' => 'pending_gateway_integration',
+            'message' => $paymentMethod['confirmation_description'],
+        ];
     }
 }

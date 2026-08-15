@@ -11,7 +11,12 @@ class QuoteCheckoutAction
 {
     public function __construct(private readonly CalculateCheckoutTotalsAction $calculateCheckoutTotals) {}
 
-    public function execute(?Cart $cart, ShippingAddressData $address, ?string $discountCode = null): CheckoutTotalsData
+    public function execute(
+        ?Cart $cart,
+        ShippingAddressData $address,
+        ?string $discountCode = null,
+        ?string $shippingOption = null,
+    ): CheckoutTotalsData
     {
         if ($cart === null) {
             throw ValidationException::withMessages([
@@ -23,7 +28,9 @@ class QuoteCheckoutAction
             cart: $cart,
             address: $address,
             discountCode: $discountCode,
+            shippingOption: $shippingOption,
             ignoreInvalidDiscount: true,
+            includeShippingOptions: true,
         );
     }
 }

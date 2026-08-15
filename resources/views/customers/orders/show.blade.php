@@ -40,6 +40,8 @@
                 </div>
 
                 <dl class="order-complete-totals">
+                    <div><dt>Thanh toán</dt><dd>{{ $paymentMethod['label'] }} · {{ $order->paymentStatusLabel() }}</dd></div>
+                    <div><dt>Vận chuyển</dt><dd>{{ $order->shipping_provider ?? 'Ước tính nội bộ' }} · {{ $order->shipping_service ?? 'Giao tiêu chuẩn' }}</dd></div>
                     <div><dt>Tạm tính</dt><dd>{{ \App\Modules\Shared\Support\Money::formatVnd($order->subtotal) }}</dd></div>
                     <div><dt>Phí giao hàng</dt><dd>{{ \App\Modules\Shared\Support\Money::formatVnd($order->shipping_fee) }}</dd></div>
                     @if ((int) $order->discount_total > 0)
@@ -48,7 +50,7 @@
                     <div><dt>Tổng thanh toán</dt><dd>{{ \App\Modules\Shared\Support\Money::formatVnd($order->total) }}</dd></div>
                 </dl>
 
-                <p class="order-shipping-note">Giao đến {{ $order->shipping_recipient_name }} · {{ $order->shipping_phone }}<br>{{ $order->shipping_address_line_1 }}@if($order->shipping_address_line_2), {{ $order->shipping_address_line_2 }}@endif, {{ $order->shipping_ward }}, {{ $order->shipping_district }}, {{ $order->shipping_city }}.</p>
+                <p class="order-shipping-note">Giao đến {{ $order->shipping_recipient_name }} · {{ $order->shipping_phone }}<br>{{ $order->shipping_address_line_1 }}@if($order->shipping_address_line_2), {{ $order->shipping_address_line_2 }}@endif, {{ $order->shipping_ward }}, {{ $order->shipping_district }}, {{ $order->shipping_city }}.@if($order->shipping_fee_is_estimated)<br>Phí giao hiển thị là ước tính nội bộ của đơn vị vận chuyển đã chọn.@endif</p>
             </section>
 
             <a class="text-link order-account-back" href="{{ route('account.show') }}">Trở về tài khoản</a>

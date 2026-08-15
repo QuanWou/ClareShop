@@ -3703,6 +3703,100 @@ body.search-drawer-open {
     margin-top: 28px;
 }
 
+.checkout-shipping-options {
+    margin-top: 28px;
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+}
+
+.checkout-shipping-options-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+
+.checkout-shipping-options-heading .eyebrow {
+    margin-bottom: 7px;
+}
+
+.checkout-shipping-options-heading h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+}
+
+.checkout-shipping-options-heading > p {
+    max-width: 300px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1.55;
+}
+
+.shipping-methods {
+    display: grid;
+    gap: 9px;
+}
+
+.shipping-method {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 15px;
+    border: 1px solid var(--line);
+    background: #fdfbf7;
+    cursor: pointer;
+    transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.shipping-method:hover {
+    border-color: #8f8172;
+    transform: translateY(-1px);
+}
+
+.shipping-method:has(input:checked) {
+    border-color: var(--ink);
+    background: #f6efe5;
+}
+
+.shipping-method input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: var(--wine);
+}
+
+.shipping-method-copy,
+.shipping-method-quote {
+    display: grid;
+    gap: 3px;
+}
+
+.shipping-method-copy strong {
+    color: var(--ink);
+    font-size: 0.84rem;
+}
+
+.shipping-method-copy small,
+.shipping-method-quote small {
+    color: var(--muted);
+    font-size: 0.7rem;
+    line-height: 1.45;
+}
+
+.shipping-method-quote {
+    justify-items: end;
+    text-align: right;
+}
+
+.shipping-method-quote strong {
+    color: var(--wine);
+    font-size: 0.8rem;
+}
+
 .payment-method {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -3739,6 +3833,13 @@ body.search-drawer-open {
     color: var(--muted);
     font-size: 0.78rem;
     line-height: 1.45;
+}
+
+.payment-method-pending {
+    margin-top: 3px;
+    color: #75564b !important;
+    font-size: 0.67rem !important;
+    font-weight: 700;
 }
 
 .checkout-note-field {
@@ -3892,6 +3993,16 @@ body.search-drawer-open {
     color: var(--muted);
     font-size: 0.76rem;
     line-height: 1.5;
+}
+
+.order-payment-pending {
+    margin-top: 16px !important;
+    padding: 12px 14px;
+    border-left: 2px solid #8e6a49;
+    background: #f5ede2;
+    color: #664f3b !important;
+    font-size: 0.78rem;
+    line-height: 1.55;
 }
 
 .checkout-quote-button {
@@ -4226,6 +4337,22 @@ body.search-drawer-open {
 
     .checkout-heading {
         margin-bottom: 40px;
+    }
+
+    .checkout-shipping-options-heading {
+        display: grid;
+        align-items: start;
+        gap: 8px;
+    }
+
+    .shipping-method {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .shipping-method-quote {
+        grid-column: 2;
+        justify-items: start;
+        text-align: left;
     }
 
     .payment-qr-card dl div {
@@ -7170,6 +7297,42 @@ a.account-record:focus-visible {
     font-weight: 500;
 }
 
+.admin-page-heading-actions {
+    display: grid;
+    justify-items: end;
+    gap: 16px;
+    max-width: 400px;
+}
+
+.admin-page-heading-actions p {
+    margin: 0;
+    color: #615b53;
+    font-size: 0.86rem;
+    line-height: 1.65;
+}
+
+.admin-user-delete-form {
+    margin-top: 46px;
+}
+
+.admin-delete-confirmation {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 14px;
+    color: #64353a;
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.admin-delete-confirmation input {
+    width: 15px;
+    height: 15px;
+    margin: 1px 0 0;
+    accent-color: #743f45;
+}
+
 @media (max-width: 1100px) {
     .admin-metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7241,6 +7404,11 @@ a.account-record:focus-visible {
         align-items: start;
         gap: 18px;
         padding-bottom: 28px;
+    }
+
+    .admin-page-heading-actions {
+        justify-items: start;
+        max-width: none;
     }
 
     .admin-detail-statuses {
@@ -10440,6 +10608,163 @@ html.js-motion :is(.catalog-collection-page, .catalog-search-page, .catalog-prod
     .collection-hero-image img,
     .product-gallery-main > img,
     :is(.catalog-collection-page, .catalog-search-page, .catalog-product-detail-page) .product-card {
+        transition: none;
+    }
+}
+
+/* Home hero — interactive pull-cord lamp */
+.hero-visual-media[data-lamp-scene] {
+    background: #5c4939;
+}
+
+.hero-visual-media[data-lamp-scene] img {
+    filter: brightness(0.67) saturate(0.82);
+    transition: filter 460ms ease;
+}
+
+.hero-visual-media[data-lamp-scene].is-lamp-on img {
+    filter: brightness(1) saturate(1);
+}
+
+.hero-lamp-light {
+    position: absolute;
+    z-index: 1;
+    top: 5%;
+    right: -7%;
+    width: 72%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 230, 177, 0.48) 0%, rgba(244, 193, 111, 0.22) 25%, rgba(244, 193, 111, 0) 69%);
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 460ms ease;
+}
+
+.hero-visual-media[data-lamp-scene].is-lamp-on .hero-lamp-light {
+    opacity: 1;
+}
+
+.hero-pull-cord {
+    --lamp-pull-distance: 0px;
+
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    right: 16%;
+    width: 52px;
+    height: 214px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: grab;
+    touch-action: none;
+}
+
+.hero-pull-cord::before {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: calc(126px + var(--lamp-pull-distance));
+    background: #3f3027;
+    box-shadow: 1px 0 0 rgba(255, 248, 234, 0.18);
+    content: '';
+    transform: translateX(-50%);
+    transition: height 230ms cubic-bezier(0.22, 0.72, 0.2, 1);
+}
+
+.hero-pull-cord-handle {
+    position: absolute;
+    top: calc(121px + var(--lamp-pull-distance));
+    left: 50%;
+    width: 24px;
+    height: 34px;
+    border: 1px solid rgba(255, 243, 222, 0.36);
+    border-radius: 48% 48% 52% 52%;
+    background: #6a3b29;
+    box-shadow: 0 7px 14px rgba(27, 19, 14, 0.28);
+    transform: translateX(-50%);
+    transition: top 230ms cubic-bezier(0.22, 0.72, 0.2, 1), background 260ms ease;
+}
+
+.hero-pull-cord-handle::after {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    left: 7px;
+    height: 1px;
+    background: rgba(255, 242, 218, 0.36);
+    content: '';
+}
+
+.hero-visual-media[data-lamp-scene].is-lamp-on .hero-pull-cord-handle {
+    background: #80513b;
+}
+
+.hero-visual-media[data-lamp-scene].is-pulling .hero-pull-cord::before,
+.hero-visual-media[data-lamp-scene].is-pulling .hero-pull-cord-handle {
+    transition: none;
+}
+
+.hero-pull-cord:hover .hero-pull-cord-handle,
+.hero-pull-cord:focus-visible .hero-pull-cord-handle {
+    background: #8e5b42;
+}
+
+.hero-pull-cord:active {
+    cursor: grabbing;
+}
+
+.hero-pull-cord:focus-visible {
+    outline: 2px solid #fffaf1;
+    outline-offset: -3px;
+}
+
+.hero-lamp-instruction {
+    position: absolute;
+    z-index: 3;
+    bottom: 20px;
+    left: 20px;
+    max-width: calc(100% - 114px);
+    margin: 0;
+    padding: 7px 10px;
+    border: 1px solid rgba(255, 250, 241, 0.42);
+    background: rgba(38, 29, 22, 0.3);
+    color: #fffaf1;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.075em;
+    line-height: 1.45;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+}
+
+@media (max-width: 720px) {
+    .hero-lamp-light {
+        top: 2%;
+        right: -26%;
+        width: 112%;
+    }
+
+    .hero-pull-cord {
+        right: 13%;
+        transform: scale(0.88);
+        transform-origin: top right;
+    }
+
+    .hero-lamp-instruction {
+        bottom: 15px;
+        left: 15px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-visual-media[data-lamp-scene] img,
+    .hero-lamp-light,
+    .hero-pull-cord::before,
+    .hero-pull-cord-handle {
         transition: none;
     }
 }

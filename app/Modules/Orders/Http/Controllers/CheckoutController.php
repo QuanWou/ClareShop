@@ -26,6 +26,7 @@ class CheckoutController extends Controller
             cart: $resolution->cart,
             address: ShippingAddressData::fromValidated($request->validated()),
             discountCode: $request->validated('discount_code'),
+            shippingOption: $request->validated('shipping_option'),
         );
 
         return response()->json(['data' => $quote->toArray()]);

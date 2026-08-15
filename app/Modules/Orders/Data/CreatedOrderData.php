@@ -4,6 +4,7 @@ namespace App\Modules\Orders\Data;
 
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\Payment;
+use App\Modules\Orders\Support\PaymentMethodCatalog;
 use App\Modules\Shared\Support\Money;
 
 readonly class CreatedOrderData
@@ -21,6 +22,7 @@ readonly class CreatedOrderData
                 'number' => $this->order->number,
                 'status' => $this->order->status,
                 'payment_method' => $this->order->payment_method,
+                'payment_method_label' => PaymentMethodCatalog::get($this->order->payment_method)['label'],
                 'payment_status' => $this->order->payment_status,
                 'subtotal' => (int) $this->order->subtotal,
                 'shipping_fee' => (int) $this->order->shipping_fee,
@@ -43,6 +45,7 @@ readonly class CreatedOrderData
                 'amount' => (int) $this->payment->amount,
                 'currency' => $this->payment->currency,
                 'vietqr' => $this->vietQr?->toArray(),
+                'integration_status' => $this->payment->payload['integration_status'] ?? null,
             ],
         ];
     }
