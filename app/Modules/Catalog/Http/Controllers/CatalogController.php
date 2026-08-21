@@ -11,6 +11,6 @@ class CatalogController extends Controller
 {
     public function index(ListCatalogProductsRequest $request, ListPublishedProductsAction $action): View
     {
-        return view('catalog.products.index', $action->execute($request->validated('category')));
+        return view('catalog.products.index', $action->execute($request->validated()));
     }
 }

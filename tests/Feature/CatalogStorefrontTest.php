@@ -147,7 +147,7 @@ class CatalogStorefrontTest extends TestCase
         $this->seed(CatalogSeeder::class);
 
         $this->assertSame(27, Product::query()->count());
-        $this->assertSame(4, Category::query()->count());
+        $this->assertSame(23, Category::query()->count());
         $this->assertDatabaseCount('product_variants', 30);
         $this->assertDatabaseCount('product_images', 33);
         $this->assertSame(3, Product::query()->where('slug', 'may-nam')->firstOrFail()->images()->count());

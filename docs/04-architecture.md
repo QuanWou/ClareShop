@@ -17,7 +17,11 @@ app/Modules/
 ├── Orders/
 ├── Appointments/
 ├── Customers/
-└── Content/
+├── Content/
+├── Blog/
+├── Media/
+├── Settings/
+└── Promotions/
 ```
 
 ## Trách nhiệm từng phần
@@ -41,6 +45,10 @@ app/Modules/
 | Appointments | Lịch tư vấn/lắp đặt và thông báo nội bộ sau này |
 | Customers | Hồ sơ khách, lịch sử đơn và yêu cầu sau đăng nhập; truy vấn tổng hợp phục vụ danh sách/hồ sơ khách trong back office |
 | Content | Nội dung biên tập và asset thương hiệu dùng chung trên storefront; registry khóa/trường tại config và lịch sử người cập nhật gần nhất |
+| Blog | Bài viết, danh mục, thẻ, trạng thái xuất bản và liên kết sản phẩm |
+| Media | Upload, tra cứu và xóa asset ảnh dùng trong back office |
+| Settings | Cấu hình cửa hàng, giao diện, SEO, SMTP và OAuth; bí mật được mã hóa |
+| Promotions | Quy tắc mã ưu đãi và tính giảm giá phía server |
 | Shared | Enum, money formatter, support dùng thật sự ở nhiều module |
 
 ## Quy tắc phụ thuộc

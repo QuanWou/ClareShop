@@ -8,10 +8,14 @@ use Illuminate\Support\Arr;
 
 class CreateCatalogCategoryAction
 {
-    public function __construct(private readonly ResolveUniqueCatalogSlugAction $resolveSlug) {}
+    public function __construct(
+        private readonly ResolveUniqueCatalogSlugAction $resolveSlug,
+        private readonly EnsureValidCategoryParentAction $ensureValidParent,
+    ) {}
 
     public function execute(array $validated): Category
     {
+        $this->ensureValidParent->execute(null, $validated['parent_id'] ?? null);
         /** @var UploadedFile|null $image */
         $image = $validated['category_image'] ?? null;
         $data = Arr::except($validated, ['category_image']);

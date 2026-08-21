@@ -7,11 +7,14 @@ use App\Modules\Cart\Models\Cart;
 use App\Modules\Catalog\Models\ProductVariant;
 use App\Modules\Orders\Data\CreatedOrderData;
 use App\Modules\Orders\Data\ShippingAddressData;
+use App\Modules\Orders\Mail\OrderPlacedMail;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderStatusHistory;
 use App\Modules\Orders\Models\PaymentStatusHistory;
 use App\Modules\Orders\Support\PaymentMethodCatalog;
+use App\Modules\Settings\Actions\ConfigureStoreMailAction;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -21,6 +24,7 @@ class CreateOrderAction
         private readonly CalculateCheckoutTotalsAction $calculateCheckoutTotals,
         private readonly BuildVietQrPaymentAction $buildVietQrPayment,
         private readonly CalculateEstimatedDeliveryAtAction $calculateEstimatedDeliveryAt,
+        private readonly ConfigureStoreMailAction $configureMail,
     ) {}
 
     public function execute(Cart $cart, User $customer, array $validated): CreatedOrderData
@@ -34,7 +38,7 @@ class CreateOrderAction
         $userId = (int) $customer->getKey();
         $address = ShippingAddressData::fromValidated($validated);
 
-        return DB::transaction(function () use ($cart, $customer, $userId, $validated, $address): CreatedOrderData {
+        $result = DB::transaction(function () use ($cart, $customer, $userId, $validated, $address): CreatedOrderData {
             $lockedCart = Cart::query()->lockForUpdate()->findOrFail($cart->getKey());
             $totals = $this->calculateCheckoutTotals->execute(
                 cart: $lockedCart,
@@ -144,6 +148,15 @@ class CreateOrderAction
                 vietQr: $vietQr,
             );
         });
+
+        try {
+            $this->configureMail->execute();
+            Mail::to($customer->email)->send(new OrderPlacedMail($result->order->load('items')));
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return $result;
     }
 
     private function generateOrderNumber(): string

@@ -38,6 +38,8 @@
                     <nav class="account-profile-nav" aria-label="Nội dung tài khoản">
                         <a href="#account-orders">Đơn hàng <span>{{ $orderCount }}</span></a>
                         <a href="#account-services">Yêu cầu hỗ trợ <span>{{ $appointmentCount }}</span></a>
+                        <a href="#account-wishlist">Yêu thích <span>{{ $wishlistProducts->count() }}</span></a>
+                        <a href="#account-recent">Đã xem gần đây</a>
                         <a href="#account-profile">Thông tin cá nhân</a>
                         <a href="#account-address">Địa chỉ nhận hàng</a>
                         <a href="#account-security">Bảo mật</a>
@@ -127,6 +129,10 @@
                         </div>
                     </section>
 
+                    <section class="account-panel" id="account-wishlist" aria-labelledby="account-wishlist-title"><div class="account-panel-heading"><div><p class="eyebrow">Đã lưu</p><h2 id="account-wishlist-title">Sản phẩm yêu thích</h2></div><a href="{{ route('catalog.products.index') }}">Khám phá thêm</a></div><div class="account-product-strip">@forelse ($wishlistProducts as $product)<x-product-card :product="$product" />@empty<p class="account-empty">Bạn chưa lưu mẫu đèn nào.</p>@endforelse</div></section>
+
+                    <section class="account-panel" id="account-recent" aria-labelledby="account-recent-title"><div class="account-panel-heading"><div><p class="eyebrow">Dấu chân nhỏ</p><h2 id="account-recent-title">Đã xem gần đây</h2></div></div><div class="account-product-strip">@forelse ($recentlyViewedProducts as $product)<x-product-card :product="$product" />@empty<p class="account-empty">Các mẫu bạn xem sẽ xuất hiện ở đây.</p>@endforelse</div></section>
+
                     <section class="account-panel" id="account-profile" aria-labelledby="account-profile-title">
                         <div class="account-panel-heading">
                             <div>
@@ -172,70 +178,28 @@
 
                     <section class="account-panel" id="account-address" aria-labelledby="account-address-title">
                         <div class="account-panel-heading">
-                            <div>
-                                <p class="eyebrow">Giao hàng</p>
-                                <h2 id="account-address-title">Địa chỉ nhận hàng mặc định</h2>
-                            </div>
-                            <p>Địa chỉ này sẽ tự điền ở checkout; bạn vẫn có thể đổi cho từng đơn.</p>
+                            <div><p class="eyebrow">Giao hàng</p><h2 id="account-address-title">Địa chỉ nhận hàng mặc định và đã lưu</h2></div>
+                            <p>Lưu nhiều địa chỉ, chọn mặc định và dùng nhanh ở checkout.</p>
                         </div>
 
-                        <form class="account-form" action="{{ route('account.address.update') }}" method="POST">
-                            @csrf
-                            @method('PUT')
+                        <div class="account-address-list">
+                            @foreach ($addresses as $address)
+                                <article class="account-address-card">
+                                    <header><div><strong>{{ $address->label }}</strong>@if ($address->is_default)<span>Mặc định</span>@endif</div><p>{{ $address->recipient_name }} · {{ $address->phone }}</p></header>
+                                    <p>{{ $address->address_line_1 }}{{ $address->address_line_2 ? ', '.$address->address_line_2 : '' }}, {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}</p>
+                                    <div class="account-address-actions">
+                                        @unless ($address->is_default)<form action="{{ route('account.addresses.default', $address) }}" method="POST">@csrf @method('PATCH')<button type="submit">Đặt mặc định</button></form>@endunless
+                                        <details><summary>Chỉnh sửa</summary>@include('customers.account.partials.address-form', ['address' => $address, 'formAction' => route('account.addresses.update', $address), 'formMethod' => 'PATCH', 'submitLabel' => 'Lưu thay đổi'])</details>
+                                        <form action="{{ route('account.addresses.destroy', $address) }}" method="POST" onsubmit="return confirm('Xóa địa chỉ này?')">@csrf @method('DELETE')<button class="is-danger" type="submit">Xóa</button></form>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
 
-                            <div class="account-form-grid">
-                                <label class="account-field account-field-full">
-                                    <span>Tên người nhận</span>
-                                    <input name="recipient_name" value="{{ old('recipient_name', $defaultAddress?->recipient_name ?? $user->name) }}" autocomplete="shipping name" maxlength="255" required>
-                                    @error('recipient_name') <small class="account-field-error">{{ $message }}</small> @enderror
-                                </label>
-
-                                <label class="account-field">
-                                    <span>Số điện thoại nhận hàng</span>
-                                    <input name="address_phone" type="tel" value="{{ old('address_phone', $defaultAddress?->phone ?? $user->phone) }}" autocomplete="shipping tel" maxlength="30" required>
-                                    @error('address_phone') <small class="account-field-error">{{ $message }}</small> @enderror
-                                </label>
-
-                                <label class="account-field">
-                                    <span>Tỉnh / Thành phố</span>
-                                    <input name="city" value="{{ old('city', $defaultAddress?->city) }}" autocomplete="shipping address-level1" maxlength="255" required>
-                                    @error('city') <small class="account-field-error">{{ $message }}</small> @enderror
-                                </label>
-
-                                <label class="account-field account-field-full">
-                                    <span>Địa chỉ</span>
-                                    <input name="address_line_1" value="{{ old('address_line_1', $defaultAddress?->address_line_1) }}" autocomplete="shipping street-address" maxlength="255" placeholder="Số nhà, tên đường" required>
-                                    @error('address_line_1') <small class="account-field-error">{{ $message }}</small> @enderror
-                                </label>
-
-                                <label class="account-field">
-                                    <span>Phường / Xã</span>
-                                    <input name="ward" value="{{ old('ward', $defaultAddress?->ward) }}" maxlength="255" required>
-                                    @error('ward') <small class="account-field-error">{{ $message }}</small> @enderror
-                                </label>
-
-                                <label class="account-field">
-                                    <span>Quận / Huyện</span>
-                                    <input name="district" value="{{ old('district', $defaultAddress?->district) }}" maxlength="255" required>
-                                    @error('district') <small class="account-field-error">{{ $message }}</small> @enderror
-                                </label>
-
-                                <label class="account-field">
-                                    <span>Mã bưu chính <small>Không bắt buộc</small></span>
-                                    <input name="postal_code" value="{{ old('postal_code', $defaultAddress?->postal_code) }}" autocomplete="shipping postal-code" maxlength="20">
-                                    @error('postal_code') <small class="account-field-error">{{ $message }}</small> @enderror
-                                </label>
-
-                                <label class="account-field">
-                                    <span>Địa chỉ bổ sung <small>Không bắt buộc</small></span>
-                                    <input name="address_line_2" value="{{ old('address_line_2', $defaultAddress?->address_line_2) }}" autocomplete="shipping address-line2" maxlength="255">
-                                    @error('address_line_2') <small class="account-field-error">{{ $message }}</small> @enderror
-                                </label>
-                            </div>
-
-                            <input name="country_code" type="hidden" value="VN">
-                            <button class="button button-primary" type="submit">Lưu địa chỉ mặc định</button>
-                        </form>
+                        <details class="account-new-address" @if ($addresses->isEmpty()) open @endif>
+                            <summary>+ Thêm địa chỉ mới</summary>
+                            @include('customers.account.partials.address-form', ['address' => null, 'formAction' => route('account.addresses.store'), 'formMethod' => 'POST', 'submitLabel' => 'Thêm địa chỉ'])
+                        </details>
                     </section>
 
                     <section class="account-panel" id="account-security" aria-labelledby="account-security-title">

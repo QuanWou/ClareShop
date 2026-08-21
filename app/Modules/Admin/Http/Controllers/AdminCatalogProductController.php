@@ -3,6 +3,8 @@
 namespace App\Modules\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Admin\Actions\ListAdminCatalogAttributesAction;
+use App\Modules\Admin\Actions\ListAdminCatalogBrandsAction;
 use App\Modules\Admin\Actions\ListAdminCatalogCategoriesAction;
 use App\Modules\Admin\Actions\ListAdminCatalogProductsAction;
 use App\Modules\Admin\Actions\ShowAdminCatalogProductAction;
@@ -42,10 +44,15 @@ class AdminCatalogProductController extends Controller
         ]);
     }
 
-    public function create(ListAdminCatalogCategoriesAction $listCategories): View
-    {
+    public function create(
+        ListAdminCatalogCategoriesAction $listCategories,
+        ListAdminCatalogBrandsAction $listBrands,
+        ListAdminCatalogAttributesAction $listAttributes,
+    ): View {
         return view('admin.catalog.products.create', [
             'categories' => $listCategories->execute(),
+            'brands' => $listBrands->execute(),
+            'attributes' => $listAttributes->execute(),
         ]);
     }
 
@@ -60,10 +67,14 @@ class AdminCatalogProductController extends Controller
         Product $product,
         ShowAdminCatalogProductAction $showProduct,
         ListAdminCatalogCategoriesAction $listCategories,
+        ListAdminCatalogBrandsAction $listBrands,
+        ListAdminCatalogAttributesAction $listAttributes,
     ): View {
         return view('admin.catalog.products.edit', [
             'product' => $showProduct->execute($product),
             'categories' => $listCategories->execute(),
+            'brands' => $listBrands->execute(),
+            'attributes' => $listAttributes->execute(),
         ]);
     }
 

@@ -39,6 +39,7 @@ class CheckoutPageController extends Controller
             ...$summary,
             'customer' => $this->customer($request),
             'defaultAddress' => $getDefaultAddress->execute($this->customer($request)),
+            'savedAddresses' => $this->customer($request)->addresses()->orderByDesc('is_default')->latest()->get(),
             'shippingOptions' => ShippingOptionCatalog::forCheckout(),
             'defaultShippingOption' => ShippingOptionCatalog::defaultCode(),
             'paymentMethods' => PaymentMethodCatalog::all(),

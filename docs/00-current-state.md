@@ -1,5 +1,7 @@
 # Trạng thái hiện tại
 
+> Cập nhật 2026-08-21: Catalog phân cấp, thương hiệu/thuộc tính, review, nhiều địa chỉ, blog, wishlist/lịch sử xem, media, báo cáo, settings/SEO/SMTP và Socialite đã được triển khai. Xem bảng đối chiếu đầy đủ tại [`08-implementation-status-2026-08-21.md`](08-implementation-status-2026-08-21.md). Các tích hợp cần credentials thật vẫn được giữ ở trạng thái cấu hình sẵn, chưa được trình bày như dịch vụ production.
+
 ## Môi trường đã kiểm tra
 
 | Thành phần | Trạng thái |

@@ -29,6 +29,14 @@
 
 Trước khi có các dữ kiện này, API Checkout chỉ trả phí **ước tính động** theo địa chỉ/tổng trọng lượng và lựa chọn đơn vị vận chuyển, được gắn cờ rõ ràng là `is_estimated = true`; không được trình bày như báo giá chính thức từ GHN/GHTK/J&T Express.
 
+## Thông tin cần có để bật email và đăng nhập mạng xã hội
+
+1. SMTP host, port, username, password, encryption và địa chỉ/tên người gửi.
+2. Google OAuth client ID, client secret và callback URL đã đăng ký.
+3. Facebook App ID, App Secret và callback URL đã đăng ký.
+
+Các trường cấu hình đã có trong Admin Settings; bí mật được mã hóa trong database và không hiển thị lại. Khi thiếu một bộ thông tin, nút provider tương ứng phải ở trạng thái chưa cấu hình.
+
 ## Cần chốt trước khi xây Appointment hoàn chỉnh
 
 1. Khu vực nào nhận tư vấn/lắp đặt?

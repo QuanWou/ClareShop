@@ -1,5 +1,16 @@
 # Cơ sở dữ liệu hoàn chỉnh — Clare V1
 
+> Cập nhật schema 2026-08-21: sơ đồ nền tảng bên dưới vẫn mô tả lõi giao dịch. Các migration cộng thêm đã bổ sung taxonomy Catalog, review, blog, settings, social account, wishlist, lịch sử xem và media; xem [`08-implementation-status-2026-08-21.md`](08-implementation-status-2026-08-21.md).
+
+## Các bảng và quan hệ bổ sung đã triển khai
+
+- Catalog: `category_product`, `brands`, `product_attributes`, `product_attribute_values`, `product_attribute_value_product`; `categories.parent_id`; brand và SEO trên sản phẩm/danh mục.
+- Review: `product_reviews`, `product_review_images`; review ràng buộc theo khách/sản phẩm và được kiểm duyệt trước khi công khai.
+- Blog: `blog_categories`, `blog_tags`, `blog_posts`, `blog_post_tag`, `blog_post_product`.
+- Settings/social: `site_settings`; `google_id`, `facebook_id`, `avatar_url` trên `users`. Giá trị bí mật trong settings được mã hóa ở tầng ứng dụng.
+- Customer experience: `wishlist_product`, `recently_viewed_products`; `label` trên `user_addresses`.
+- Media: `media_assets`, chỉ nhận asset ảnh raster công khai đã được validation.
+
 ## Trạng thái và nguyên tắc
 
 - MySQL chạy tại `127.0.0.1:2000`, database `clare`.

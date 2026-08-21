@@ -47,7 +47,7 @@
 
 ## Phase 4 — Checkout và Orders
 
-**Đang triển khai**
+**Đã hoàn thành phần nội bộ; chờ credentials để nối dịch vụ thật**
 
 1. Đã chốt COD, chuyển khoản VietQR động và không có VAT ở V1.
 2. Đã tạo schema `orders`, `order_items`, `order_status_histories`, `payments`, `inventory_movements`; biến thể có thêm trọng lượng đóng gói.
@@ -58,7 +58,7 @@
 
 ## Phase 5 — Consultation và installation
 
-**Đang triển khai**
+**Đã hoàn thành luồng gửi yêu cầu/xử lý thủ công; chờ chốt lịch và vùng phục vụ**
 
 1. Đã tạo bảng Appointment, lịch sử trạng thái, Form Request và Action tạo yêu cầu trong transaction.
 2. Đã có form công khai cho tư vấn/lắp đặt; khách chỉ gửi thời gian mong muốn, hệ thống tạo trạng thái `pending` và không tự xác nhận lịch.
@@ -66,15 +66,16 @@
 
 ## Phase 6 — Account, admin và content
 
-**Đang triển khai**
+**Đã hoàn thành phạm vi chức năng trong tài liệu ngày 2026-08-21**
 
 1. Đã có authentication session nguyên bản của Laravel: đăng ký, đăng nhập, đăng xuất, rate limit đăng nhập, kiểm tra `is_active` và hợp nhất giỏ khách sau login. Trang đăng nhập/đăng ký đã có giao diện thương hiệu responsive, validation hai lớp, chỉ báo độ mạnh và thao tác hiện/ẩn mật khẩu.
 2. Đã thêm trang Tài khoản cơ bản để khách xem các đơn/yêu cầu được tạo khi đã đăng nhập.
 3. Đã có role gate `admin`, dashboard vận hành có biểu đồ/chỉ số, back office Order/Appointment, CRUD Catalog (danh mục, sản phẩm, biến thể, ảnh), quản lý mã ưu đãi và module khách hàng. Admin có thể tìm/lọc/sắp xếp khách, xem thông tin liên hệ, trạng thái tài khoản, tổng đơn, tổng tiền từ đơn hoàn tất, đơn gần đây và địa chỉ đã lưu; quyền cập nhật/khóa/xóa an toàn hiện có vẫn được giữ. Catalog archive mềm để giữ audit đơn hàng.
 4. Đã có module Content và trang `/admin/content` để sửa nội dung/ảnh biên tập của storefront; dữ liệu sản phẩm/danh mục tiếp tục sửa qua Catalog Admin và nội dung trạng thái/validation vẫn cố định theo nghiệp vụ.
+5. Đã có nhiều địa chỉ, wishlist, lịch sử xem, review mua thật/kiểm duyệt, taxonomy Catalog, Blog/TinyMCE, thư viện media, báo cáo, Settings/SEO/SMTP và đăng nhập Google/Facebook ở trạng thái cấu hình sẵn.
 
 ## Phase 7 — Chất lượng và triển khai
 
-- Feature tests cho catalog, cart, checkout, stock và appointment.
-- Kiểm tra authorization, validation, rate limit, CSRF, logging.
-- Cấu hình production, backup MySQL, queue/mail thật, monitoring.
+- Feature tests cho catalog, cart, checkout, stock, appointment và các module mở rộng: đã có; lần chạy 2026-08-21 đạt 78/78 test, 645 assertion.
+- Authorization, validation, rate limit và CSRF: đã có ở các luồng chính; tiếp tục rà soát khi thêm tích hợp ngoài.
+- Cấu hình production, backup MySQL, queue/mail thật, OAuth/gateway/carrier và monitoring: chờ môi trường/credentials production.

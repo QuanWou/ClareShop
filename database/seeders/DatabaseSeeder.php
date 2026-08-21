@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             CatalogSeeder::class,
             PromotionSeeder::class,
             SiteContentSeeder::class,
+            BlogTaxonomySeeder::class,
         ]);
     }
 }

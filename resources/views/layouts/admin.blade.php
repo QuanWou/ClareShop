@@ -21,8 +21,15 @@
                     <a @class(['is-current' => request()->routeIs('admin.orders.*')]) href="{{ route('admin.orders.index') }}">Đơn hàng</a>
                     <a @class(['is-current' => request()->routeIs('admin.catalog.products.*')]) href="{{ route('admin.catalog.products.index') }}">Sản phẩm</a>
                     <a @class(['is-current' => request()->routeIs('admin.catalog.categories.*')]) href="{{ route('admin.catalog.categories.index') }}">Danh mục</a>
+                    <a @class(['is-current' => request()->routeIs('admin.catalog.attributes.*')]) href="{{ route('admin.catalog.attributes.index') }}">Thuộc tính</a>
+                    <a @class(['is-current' => request()->routeIs('admin.catalog.brands.*')]) href="{{ route('admin.catalog.brands.index') }}">Thương hiệu</a>
+                    <a @class(['is-current' => request()->routeIs('admin.reviews.*')]) href="{{ route('admin.reviews.index') }}">Đánh giá</a>
+                    <a @class(['is-current' => request()->routeIs('admin.blog.*')]) href="{{ route('admin.blog.posts.index') }}">Bài viết</a>
+                    <a @class(['is-current' => request()->routeIs('admin.media.*')]) href="{{ route('admin.media.index') }}">Thư viện media</a>
                     <a @class(['is-current' => request()->routeIs('admin.promotions.*')]) href="{{ route('admin.promotions.index') }}">Mã ưu đãi</a>
                     <a @class(['is-current' => request()->routeIs('admin.content.*')]) href="{{ route('admin.content.edit') }}">Nội dung website</a>
+                    <a @class(['is-current' => request()->routeIs('admin.settings.*')]) href="{{ route('admin.settings.edit') }}">Cấu hình cửa hàng</a>
+                    <a @class(['is-current' => request()->routeIs('admin.reports.*')]) href="{{ route('admin.reports.index') }}">Báo cáo</a>
                     <a @class(['is-current' => request()->routeIs('admin.users.*')]) href="{{ route('admin.users.index') }}">Khách hàng</a>
                     <a @class(['is-current' => request()->routeIs('admin.appointments.*')]) href="{{ route('admin.appointments.index') }}">Tư vấn &amp; lắp đặt</a>
                 </nav>

@@ -24,6 +24,7 @@ class SaveDefaultUserAddressRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'label' => ['nullable', 'string', 'max:60'],
             'recipient_name' => ['required', 'string', 'min:2', 'max:255'],
             'address_phone' => ['required', 'string', 'regex:/^(?:\+84|0)(?:3|5|7|8|9)\d{8}$/'],
             'address_line_1' => ['required', 'string', 'max:255'],
@@ -33,6 +34,7 @@ class SaveDefaultUserAddressRequest extends FormRequest
             'city' => ['required', 'string', 'max:255'],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'country_code' => ['required', 'string', 'size:2', 'in:VN'],
+            'is_default' => ['nullable', 'boolean'],
         ];
     }
 

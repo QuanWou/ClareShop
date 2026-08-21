@@ -10,6 +10,9 @@ class ShowAdminCatalogProductAction
     {
         return $product->load([
             'category',
+            'categories',
+            'brand',
+            'attributeValues.attribute',
             'variants.images',
             'archivedVariants',
             'images.variant',

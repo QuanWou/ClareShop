@@ -57,64 +57,58 @@
 
     <section class="all-products-page section" aria-labelledby="products-grid-title">
         <div class="shell">
-            <div class="products-filter-panel" data-reveal>
-                <div class="products-filter-heading">
-                    <span>{{ $siteContent->get('catalog_filter_label') }}</span>
-                    <strong>{{ $selectedCategory?->name ?? 'Tất cả kiểu đèn' }}</strong>
-                </div>
-
-                <nav class="catalog-category-filter" aria-label="Lọc theo loại đèn">
-                    <a
-                        @class(['is-current' => $selectedCategory === null])
-                        href="{{ route('catalog.products.index') }}"
-                        @if ($selectedCategory === null) aria-current="page" @endif
-                    >
-                        <span>Tất cả</span><small>{{ $totalProductCount }}</small>
-                    </a>
-                    @foreach ($categories as $category)
-                        <a
-                            @class(['is-current' => $selectedCategory?->is($category)])
-                            href="{{ route('catalog.products.index', ['category' => $category->slug]) }}"
-                            @if ($selectedCategory?->is($category)) aria-current="page" @endif
-                        >
-                            <span>{{ $category->name }}</span><small>{{ $category->published_products_count }}</small>
-                        </a>
-                    @endforeach
-                </nav>
+            <div class="catalog-mobile-toolbar" data-reveal>
+                <button type="button" aria-controls="catalog-filter-sidebar" aria-expanded="false" data-catalog-filter-open>Bộ lọc</button>
+                <span>{{ $products->total() }} sản phẩm phù hợp</span>
             </div>
 
-            <div class="products-listing-heading" data-reveal>
-                <div>
-                    <p class="eyebrow">{{ $siteContent->get('catalog_listing_eyebrow') }}</p>
-                    <h2 id="products-grid-title">{{ $selectedCategory ? 'Những mẫu '.$selectedCategory->name : 'Tất cả mẫu đang có' }}</h2>
-                </div>
-                <div class="products-listing-meta">
-                    <p><strong>{{ $products->total() }}</strong> sản phẩm</p>
-                    <span>{{ $siteContent->get('catalog_sort_note') }}</span>
-                    @if ($selectedCategory)
-                        <a href="{{ route('catalog.products.index') }}">Gỡ bộ lọc <span aria-hidden="true">×</span></a>
+            <div class="catalog-shop-layout">
+                @include('catalog.partials.filters')
+
+                <div class="catalog-results">
+                    <div class="products-listing-heading" data-reveal>
+                        <div>
+                            <p class="eyebrow">{{ $siteContent->get('catalog_listing_eyebrow') }}</p>
+                            <h2 id="products-grid-title">{{ $selectedCategory ? 'Những mẫu '.$selectedCategory->name : 'Tất cả mẫu đang có' }}</h2>
+                            <p class="catalog-result-count"><strong>{{ $products->total() }}</strong> sản phẩm</p>
+                        </div>
+                        <div class="catalog-result-controls">
+                            <label>
+                                <span>Sắp xếp</span>
+                                <select name="sort" form="catalog-filter-form" data-catalog-auto-submit>
+                                    <option value="newest" @selected(($filters['sort'] ?? 'newest') === 'newest')>Mới nhất</option>
+                                    <option value="bestselling" @selected(($filters['sort'] ?? '') === 'bestselling')>Bán chạy</option>
+                                    <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Giá tăng dần</option>
+                                    <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Giá giảm dần</option>
+                                </select>
+                            </label>
+                            <div class="catalog-view-switch" aria-label="Kiểu hiển thị">
+                                <a @class(['is-current' => $viewMode === 'grid']) href="{{ request()->fullUrlWithQuery(['view' => 'grid']) }}" aria-label="Hiển thị dạng lưới">▦</a>
+                                <a @class(['is-current' => $viewMode === 'list']) href="{{ request()->fullUrlWithQuery(['view' => 'list']) }}" aria-label="Hiển thị dạng danh sách">☷</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div @class(['product-grid', 'products-catalog-grid', 'is-list-view' => $viewMode === 'list']) data-reveal-group>
+                        @forelse ($products as $product)
+                            <x-product-card :product="$product" reveal />
+                        @empty
+                            <div class="products-empty-state">
+                                <span aria-hidden="true">✦</span>
+                                <h2>Chưa có mẫu phù hợp với bộ lọc.</h2>
+                                <p>Đặt lại bộ lọc hoặc kể Clare nghe về căn phòng của bạn.</p>
+                                <a class="button button-primary" href="{{ route('catalog.products.index') }}">Đặt lại bộ lọc</a>
+                            </div>
+                        @endforelse
+                    </div>
+
+                    @if ($products->hasPages())
+                        <div class="pagination-wrap products-pagination">
+                            <x-catalog-pagination :paginator="$products" />
+                        </div>
                     @endif
                 </div>
             </div>
-
-            <div class="product-grid products-catalog-grid" data-reveal-group>
-                @forelse ($products as $product)
-                    <x-product-card :product="$product" reveal />
-                @empty
-                    <div class="products-empty-state">
-                        <span aria-hidden="true">✦</span>
-                        <h2>Góc này đang chờ một chiếc đèn mới.</h2>
-                        <p>Thử xem toàn bộ bộ sưu tập hoặc kể Clare nghe về căn phòng của bạn.</p>
-                        <a class="button button-primary" href="{{ route('catalog.products.index') }}">Xem tất cả đèn</a>
-                    </div>
-                @endforelse
-            </div>
-
-            @if ($products->hasPages())
-                <div class="pagination-wrap products-pagination">
-                    <x-catalog-pagination :paginator="$products" />
-                </div>
-            @endif
 
             <aside class="products-consultation-card" aria-labelledby="products-consultation-title" data-reveal data-ambient>
                 <div class="products-consultation-mark" aria-hidden="true">C</div>

@@ -22,9 +22,12 @@ class AdminCatalogCategoryController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(ListAdminCatalogCategoriesAction $listCategories): View
     {
-        return view('admin.catalog.categories.form', ['category' => new Category()]);
+        return view('admin.catalog.categories.form', [
+            'category' => new Category,
+            'parentCategories' => $listCategories->execute(),
+        ]);
     }
 
     public function store(StoreCatalogCategoryRequest $request, CreateCatalogCategoryAction $createCategory): RedirectResponse
@@ -34,9 +37,12 @@ class AdminCatalogCategoryController extends Controller
         return redirect()->route('admin.catalog.categories.edit', $category)->with('success', 'Nhóm sản phẩm đã được tạo.');
     }
 
-    public function edit(Category $category): View
+    public function edit(Category $category, ListAdminCatalogCategoriesAction $listCategories): View
     {
-        return view('admin.catalog.categories.form', compact('category'));
+        return view('admin.catalog.categories.form', [
+            'category' => $category,
+            'parentCategories' => $listCategories->execute()->reject(fn (Category $candidate) => $candidate->is($category)),
+        ]);
     }
 
     public function update(

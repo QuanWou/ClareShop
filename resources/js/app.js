@@ -17,9 +17,24 @@ import '@fontsource/noto-serif/vietnamese-700.css';
 import './auth.js';
 import './storefront-motion.js';
 
+if (document.querySelector('[data-rich-text-editor]')) {
+    import('./admin-rich-text.js');
+}
+
+document.querySelectorAll('[data-storefront-toast]').forEach((toast) => {
+    const dismiss = () => {
+        toast.classList.add('is-leaving');
+        window.setTimeout(() => toast.remove(), 220);
+    };
+    toast.querySelector('[data-toast-close]')?.addEventListener('click', dismiss);
+    window.setTimeout(dismiss, 4500);
+});
+
 const productGallery = document.querySelector('[data-product-gallery]');
 const productGalleryMain = productGallery?.querySelector('[data-gallery-main]');
 const productGalleryThumbnails = productGallery?.querySelectorAll('[data-gallery-thumbnail]') ?? [];
+const productGalleryLightbox = document.querySelector('[data-gallery-lightbox]');
+const productGalleryLightboxImage = productGalleryLightbox?.querySelector('[data-gallery-lightbox-image]');
 
 const selectProductGalleryImage = (url, alt) => {
     if (!productGalleryMain || !url) {
@@ -29,6 +44,11 @@ const selectProductGalleryImage = (url, alt) => {
     productGalleryMain.classList.add('is-changing');
     productGalleryMain.src = url;
     productGalleryMain.alt = alt || productGalleryMain.alt;
+
+    if (productGalleryLightboxImage) {
+        productGalleryLightboxImage.src = url;
+        productGalleryLightboxImage.alt = alt || productGalleryMain.alt;
+    }
 
     productGalleryThumbnails.forEach((thumbnail) => {
         const isCurrent = thumbnail.dataset.imageUrl === url;
@@ -48,6 +68,22 @@ productGalleryThumbnails.forEach((thumbnail) => {
     });
 });
 
+document.querySelector('[data-gallery-lightbox-open]')?.addEventListener('click', () => {
+    if (productGalleryLightbox?.showModal) {
+        productGalleryLightbox.showModal();
+    }
+});
+
+productGalleryLightbox?.querySelector('[data-gallery-lightbox-close]')?.addEventListener('click', () => {
+    productGalleryLightbox.close();
+});
+
+productGalleryLightbox?.addEventListener('click', (event) => {
+    if (event.target === productGalleryLightbox) {
+        productGalleryLightbox.close();
+    }
+});
+
 const optionGroups = document.querySelectorAll('[data-product-options]');
 
 optionGroups.forEach((group) => {
@@ -58,6 +94,10 @@ optionGroups.forEach((group) => {
     const stockStatus = group.querySelector('[data-stock-status]');
     const addCartButton = group.querySelector('[data-add-cart-button]');
     const quantityInput = group.querySelector('[data-quantity-input]');
+    const buyNowForm = group.querySelector('[data-buy-now-form]');
+    const buyNowVariant = buyNowForm?.querySelector('[data-buy-now-variant]');
+    const buyNowQuantity = buyNowForm?.querySelector('[data-buy-now-quantity]');
+    const buyNowButton = buyNowForm?.querySelector('[data-buy-now-button]');
 
     options.forEach((option) => {
         option.addEventListener('change', () => {
@@ -71,6 +111,8 @@ optionGroups.forEach((group) => {
             stockStatus.classList.toggle('is-out-of-stock', option.dataset.inStock !== 'true');
             addCartButton.disabled = option.dataset.inStock !== 'true';
             addCartButton.textContent = option.dataset.inStock === 'true' ? 'Thêm vào giỏ' : 'Tạm hết hàng';
+            if (buyNowVariant) buyNowVariant.value = option.value;
+            if (buyNowButton) buyNowButton.disabled = option.dataset.inStock !== 'true';
             quantityInput.max = Math.max(1, Number(option.dataset.stockQuantity));
 
             selectProductGalleryImage(option.dataset.imageUrl, option.dataset.imageAlt);
@@ -88,12 +130,130 @@ optionGroups.forEach((group) => {
             }
         });
     });
+
+    quantityInput?.addEventListener('input', () => {
+        if (buyNowQuantity) buyNowQuantity.value = quantityInput.value;
+    });
 });
 
 const cartPreview = document.querySelector('[data-cart-preview]');
 const cartCount = document.querySelector('[data-cart-count]');
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 const motionIsReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+document.querySelectorAll('[data-saved-address]').forEach((addressOption) => {
+    addressOption.addEventListener('change', () => {
+        if (!addressOption.checked) {
+            return;
+        }
+
+        const checkoutForm = addressOption.closest('[data-checkout-form]');
+        const addressFields = {
+            shipping_recipient_name: addressOption.dataset.recipientName,
+            shipping_phone: addressOption.dataset.phone,
+            shipping_address_line_1: addressOption.dataset.addressLine1,
+            shipping_address_line_2: addressOption.dataset.addressLine2,
+            shipping_ward: addressOption.dataset.ward,
+            shipping_district: addressOption.dataset.district,
+            shipping_city: addressOption.dataset.city,
+            shipping_postal_code: addressOption.dataset.postalCode,
+        };
+
+        Object.entries(addressFields).forEach(([name, value]) => {
+            const field = checkoutForm?.elements.namedItem(name);
+
+            if (field) {
+                field.value = value || '';
+                field.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+    });
+});
+
+document.querySelectorAll('[data-wishlist-form]').forEach((form) => {
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const button = form.querySelector('[data-wishlist-button]');
+        if (!button || button.disabled) return;
+
+        button.disabled = true;
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.message || 'Không thể cập nhật yêu thích.');
+            const active = payload.data.active;
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            const icon = button.querySelector('span[aria-hidden="true"]');
+            if (icon) icon.textContent = active ? '♥' : '♡';
+            if (form.classList.contains('product-detail-wishlist')) {
+                button.lastChild.textContent = active ? ' Đã lưu yêu thích' : ' Lưu vào yêu thích';
+            }
+        } catch (error) {
+            window.alert(error.message);
+        } finally {
+            button.disabled = false;
+        }
+    });
+});
+
+document.querySelectorAll('[data-header-search-form]').forEach((searchForm) => {
+    const input = searchForm.querySelector('[data-search-input]');
+    const suggestions = searchForm.querySelector('[data-search-suggestions]');
+    const suggestionsUrl = searchForm.dataset.searchSuggestionsUrl;
+    let searchTimer;
+    let searchController;
+
+    if (!input || !suggestions || !suggestionsUrl) return;
+
+    input.addEventListener('input', () => {
+        window.clearTimeout(searchTimer);
+        searchController?.abort();
+        const term = input.value.trim();
+        if (term.length < 2) {
+            suggestions.hidden = true;
+            suggestions.replaceChildren();
+            return;
+        }
+
+        searchTimer = window.setTimeout(async () => {
+            searchController = new AbortController();
+            suggestions.hidden = false;
+            suggestions.textContent = 'Đang tìm những mẫu phù hợp…';
+            try {
+                const url = new URL(suggestionsUrl, window.location.origin);
+                url.searchParams.set('q', term);
+                const response = await fetch(url, { signal: searchController.signal, headers: { Accept: 'application/json' } });
+                const payload = await response.json();
+                suggestions.replaceChildren();
+                payload.data.forEach((product) => {
+                    const link = document.createElement('a');
+                    link.href = product.url;
+                    if (product.image) {
+                        const image = document.createElement('img');
+                        image.src = product.image;
+                        image.alt = '';
+                        link.append(image);
+                    }
+                    const copy = document.createElement('span');
+                    const name = document.createElement('strong');
+                    const price = document.createElement('small');
+                    name.textContent = product.name;
+                    price.textContent = product.price;
+                    copy.append(name, price);
+                    link.append(copy);
+                    suggestions.append(link);
+                });
+                if (!payload.data.length) suggestions.textContent = 'Chưa thấy mẫu phù hợp. Nhấn Enter để xem tìm kiếm đầy đủ.';
+            } catch (error) {
+                if (error.name !== 'AbortError') suggestions.hidden = true;
+            }
+        }, 180);
+    });
+});
 
 document.querySelectorAll('[data-lamp-toggle]').forEach((control) => {
     const scene = control.closest('[data-lamp-scene]');
@@ -720,3 +880,51 @@ if (appointmentForm) {
 
     syncAddressRequirements();
 }
+
+const catalogFilterPanel = document.querySelector('[data-catalog-filter-panel]');
+const catalogFilterOpen = document.querySelector('[data-catalog-filter-open]');
+const catalogFilterCloseButtons = document.querySelectorAll('[data-catalog-filter-close]');
+
+if (catalogFilterPanel && catalogFilterOpen) {
+    const closeCatalogFilters = () => {
+        document.body.classList.remove('has-catalog-filters-open');
+        catalogFilterOpen.setAttribute('aria-expanded', 'false');
+        catalogFilterOpen.focus({ preventScroll: true });
+    };
+
+    catalogFilterOpen.addEventListener('click', () => {
+        document.body.classList.add('has-catalog-filters-open');
+        catalogFilterOpen.setAttribute('aria-expanded', 'true');
+        catalogFilterPanel.querySelector('input, select, button')?.focus({ preventScroll: true });
+    });
+
+    catalogFilterCloseButtons.forEach((button) => button.addEventListener('click', closeCatalogFilters));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && document.body.classList.contains('has-catalog-filters-open')) {
+            closeCatalogFilters();
+        }
+    });
+}
+
+document.querySelectorAll('[data-catalog-auto-submit]').forEach((control) => {
+    control.addEventListener('change', () => {
+        const form = document.getElementById(control.getAttribute('form'));
+
+        if (!form) {
+            return;
+        }
+
+        form.setAttribute('aria-busy', 'true');
+        form.requestSubmit();
+    });
+});
+
+document.querySelectorAll('#catalog-filter-form').forEach((form) => {
+    form.addEventListener('submit', () => {
+        form.setAttribute('aria-busy', 'true');
+        form.querySelectorAll('button[type="submit"]').forEach((button) => {
+            button.disabled = true;
+            button.textContent = 'Đang lọc…';
+        });
+    });
+});

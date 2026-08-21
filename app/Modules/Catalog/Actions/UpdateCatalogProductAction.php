@@ -3,6 +3,8 @@
 namespace App\Modules\Catalog\Actions;
 
 use App\Modules\Catalog\Models\Product;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class UpdateCatalogProductAction
 {
@@ -10,9 +12,21 @@ class UpdateCatalogProductAction
 
     public function execute(Product $product, array $validated): Product
     {
-        $validated['slug'] = $this->resolveSlug->execute(($validated['slug'] ?? null) ?: $validated['name'], Product::class, $product->getKey());
-        $product->update($validated);
+        return DB::transaction(function () use ($product, $validated): Product {
+            $categoryIds = collect($validated['category_ids'] ?? [])
+                ->push($validated['category_id'] ?? null)
+                ->filter()
+                ->unique()
+                ->values();
+            $attributeValueIds = collect($validated['attribute_value_ids'] ?? [])->unique()->values();
+            $productData = Arr::except($validated, ['category_ids', 'attribute_value_ids']);
+            $productData['category_id'] = $validated['category_id'] ?? $categoryIds->first();
+            $productData['slug'] = $this->resolveSlug->execute(($productData['slug'] ?? null) ?: $productData['name'], Product::class, $product->getKey());
+            $product->update($productData);
+            $product->categories()->sync($categoryIds->all());
+            $product->attributeValues()->sync($attributeValueIds->all());
 
-        return $product->fresh(['category', 'variants', 'images']);
+            return $product->fresh(['category', 'categories', 'brand', 'attributeValues.attribute', 'variants', 'images']);
+        });
     }
 }

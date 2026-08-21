@@ -2,11 +2,12 @@
 
 namespace App\Modules\Admin\Actions;
 
+use App\Models\User;
 use App\Modules\Appointments\Models\Appointment;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductVariant;
 use App\Modules\Orders\Models\Order;
-use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class BuildAdminDashboardAction
 {
@@ -80,6 +81,9 @@ class BuildAdminDashboardAction
                     ->where('status', '!=', 'cancelled')
                     ->where('payment_status', 'paid')
                     ->sum('total'),
+                'todayRevenue' => (float) Order::query()->whereDate('placed_at', today())->where('status', '!=', 'cancelled')->sum('total'),
+                'monthRevenue' => (float) Order::query()->whereBetween('placed_at', [now()->startOfMonth(), now()->endOfMonth()])->where('status', '!=', 'cancelled')->sum('total'),
+                'productsSold' => (int) DB::table('order_items')->join('orders', 'orders.id', '=', 'order_items.order_id')->where('orders.status', '!=', 'cancelled')->sum('order_items.quantity'),
                 'products' => Product::query()->count(),
                 'lowStockVariants' => ProductVariant::query()
                     ->where('is_active', true)

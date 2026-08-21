@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Catalog\Models\ProductVariant;
-use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Actions\TransitionOrderStatusAction;
+use App\Modules\Orders\Models\Order;
 use App\Modules\Promotions\Models\PromotionCode;
 use Carbon\Carbon;
 use Database\Seeders\CatalogSeeder;
@@ -69,6 +69,7 @@ class CheckoutApiTest extends TestCase
         try {
             $customer = $this->customer();
             $variant = ProductVariant::query()->where('sku', 'CLR-HH-BRONZE')->firstOrFail();
+            $variant->product()->update(['published_at' => now()->subDay()]);
             $cart = $this->createGuestCartWithItem($variant, 1);
 
             $this->actingAs($customer)

@@ -38,6 +38,7 @@ class NewArrivalCatalogSeeder extends Seeder
                         'published_at' => now()->subMinutes($product['published_minutes_ago']),
                     ],
                 );
+                $productModel->categories()->syncWithoutDetaching([$category->getKey()]);
 
                 $productModel->variants()->withTrashed()->updateOrCreate(
                     ['sku' => $product['variant']['sku']],

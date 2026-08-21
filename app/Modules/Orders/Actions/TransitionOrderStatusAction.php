@@ -3,16 +3,21 @@
 namespace App\Modules\Orders\Actions;
 
 use App\Modules\Catalog\Models\ProductVariant;
+use App\Modules\Orders\Mail\OrderStatusUpdatedMail;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderDiscount;
 use App\Modules\Orders\Models\OrderStatusHistory;
 use App\Modules\Promotions\Models\PromotionCode;
+use App\Modules\Settings\Actions\ConfigureStoreMailAction;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class TransitionOrderStatusAction
 {
+    public function __construct(private readonly ConfigureStoreMailAction $configureMail) {}
+
     private const ALLOWED_TRANSITIONS = [
         'pending' => ['confirmed', 'cancelled'],
         'confirmed' => ['processing', 'cancelled'],
@@ -27,7 +32,7 @@ class TransitionOrderStatusAction
         ?string $note,
         ?string $cancelReason,
     ): Order {
-        return DB::transaction(function () use ($order, $actorId, $nextStatus, $note, $cancelReason): Order {
+        $updatedOrder = DB::transaction(function () use ($order, $actorId, $nextStatus, $note, $cancelReason): Order {
             $lockedOrder = Order::query()
                 ->with('items')
                 ->lockForUpdate()
@@ -82,6 +87,15 @@ class TransitionOrderStatusAction
 
             return $lockedOrder->fresh(['items', 'payments']);
         });
+
+        try {
+            $this->configureMail->execute();
+            Mail::to($updatedOrder->customer_email)->send(new OrderStatusUpdatedMail($updatedOrder));
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        return $updatedOrder;
     }
 
     public function allowedNextStatuses(Order $order): array

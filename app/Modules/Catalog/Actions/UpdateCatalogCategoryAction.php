@@ -9,10 +9,14 @@ use Illuminate\Support\Facades\Storage;
 
 class UpdateCatalogCategoryAction
 {
-    public function __construct(private readonly ResolveUniqueCatalogSlugAction $resolveSlug) {}
+    public function __construct(
+        private readonly ResolveUniqueCatalogSlugAction $resolveSlug,
+        private readonly EnsureValidCategoryParentAction $ensureValidParent,
+    ) {}
 
     public function execute(Category $category, array $validated): Category
     {
+        $this->ensureValidParent->execute($category, $validated['parent_id'] ?? null);
         /** @var UploadedFile|null $image */
         $image = $validated['category_image'] ?? null;
         $data = Arr::except($validated, ['category_image']);

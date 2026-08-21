@@ -6,28 +6,17 @@ use App\Modules\Catalog\Models\Category;
 
 class ListCollectionProductsAction
 {
-    public function execute(Category $category): array
+    public function __construct(private readonly ListPublishedProductsAction $listProducts) {}
+
+    /** @param array<string, mixed> $filters */
+    public function execute(Category $category, array $filters = []): array
     {
-        $category = Category::query()
-            ->visible()
-            ->whereKey($category->getKey())
-            ->firstOrFail();
+        $data = $this->listProducts->execute([
+            ...$filters,
+            'category' => $category->slug,
+        ]);
+        $data['category'] = $data['selectedCategory'];
 
-        $categories = Category::query()
-            ->visible()
-            ->withCount([
-                'products as published_products_count' => fn ($query) => $query->published(),
-            ])
-            ->get();
-
-        $products = $category->products()
-            ->published()
-            ->withStorefrontSummary()
-            ->with(['category', 'images'])
-            ->orderByDesc('is_featured')
-            ->orderByDesc('published_at')
-            ->paginate(12);
-
-        return compact('category', 'categories', 'products');
+        return $data;
     }
 }

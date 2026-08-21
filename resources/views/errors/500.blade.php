@@ -1,0 +1,2 @@
+@extends('layouts.storefront', ['title' => 'Clare đang kiểm tra'])
+@section('content')<section class="storefront-error-page section"><div class="shell"><span aria-hidden="true">500</span><p class="eyebrow">Một khoảng nghỉ ngắn</p><h1>Clare đang kiểm tra lại trang này.</h1><p>Vui lòng thử lại sau ít phút. Giỏ hàng và tài khoản của bạn vẫn được giữ nguyên.</p><div><a class="button button-primary" href="{{ route('catalog.home') }}">Về trang chủ</a></div></div></section>@endsection

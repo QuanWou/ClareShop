@@ -54,6 +54,7 @@ class SupplementalCatalogSeeder extends Seeder
                         'published_at' => now()->subHours($product['published_hours_ago']),
                     ],
                 );
+                $productModel->categories()->syncWithoutDetaching([$category->getKey()]);
 
                 $productModel->variants()->updateOrCreate(
                     ['sku' => $product['variant']['sku']],

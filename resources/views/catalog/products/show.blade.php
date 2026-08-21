@@ -1,6 +1,6 @@
 @extends('layouts.storefront', [
-    'title' => $product->name,
-    'description' => $product->short_description,
+    'title' => $product->seo_title ?: $product->name,
+    'description' => $product->seo_description ?: $product->short_description,
     'bodyClass' => 'catalog-product-detail-page',
 ])
 
@@ -45,6 +45,12 @@
                             <span class="product-showcase-badge">Clare chọn</span>
                         @endif
 
+                        @if ($displayImage)
+                            <button class="product-gallery-zoom" type="button" aria-label="Phóng to ảnh {{ $product->name }}" data-gallery-lightbox-open>
+                                <span aria-hidden="true">⌕</span> Phóng to
+                            </button>
+                        @endif
+
                         <span class="product-gallery-hint" aria-hidden="true">Chạm ảnh nhỏ để đổi góc nhìn</span>
                     </div>
 
@@ -73,6 +79,14 @@
                             <a class="product-category-link" href="{{ route('catalog.collections.show', $product->category) }}">{{ $product->category->name }}</a>
                         @endif
                         <h1 id="product-title">{{ $product->name }}</h1>
+                        <div class="product-detail-meta">
+                            @if ($product->brand)<span>{{ $product->brand->name }}</span>@endif
+                            <a href="#product-reviews">
+                                <span class="review-stars" aria-hidden="true">{{ str_repeat('★', (int) round((float) $product->approved_reviews_average)).str_repeat('☆', 5 - (int) round((float) $product->approved_reviews_average)) }}</span>
+                                {{ $product->approved_reviews_count }} đánh giá
+                            </a>
+                            <span>{{ number_format((int) ($product->sold_count ?? 0), 0, ',', '.') }} đã bán</span>
+                        </div>
                         <p class="product-lede">{{ $product->short_description }}</p>
                     </div>
 
@@ -155,6 +169,15 @@
                             </div>
                             <p class="add-cart-feedback" aria-live="polite" data-cart-feedback></p>
                         </form>
+                        <form class="product-buy-now-form" action="{{ route('buy-now') }}" method="POST" data-buy-now-form>
+                            @csrf
+                            <input type="hidden" name="product_variant_id" value="{{ $selectedVariant->getKey() }}" data-buy-now-variant>
+                            <input type="hidden" name="quantity" value="1" data-buy-now-quantity>
+                            <button class="button button-secondary button-wide" type="submit" @disabled(! $selectedVariant->isInStock()) data-buy-now-button>Mua ngay</button>
+                        </form>
+                        @auth
+                            <form action="{{ route('wishlist.toggle', $product) }}" method="POST" class="product-detail-wishlist" data-wishlist-form>@csrf<button type="submit" aria-pressed="{{ $product->is_wishlisted ?? false ? 'true' : 'false' }}" data-wishlist-button><span aria-hidden="true">{{ $product->is_wishlisted ?? false ? '♥' : '♡' }}</span> {{ $product->is_wishlisted ?? false ? 'Đã lưu yêu thích' : 'Lưu vào yêu thích' }}</button></form>
+                        @endauth
                     @else
                         <div class="product-unavailable">
                             <p>Sản phẩm hiện chưa có biến thể đang bán.</p>
@@ -199,6 +222,14 @@
                         <dt>Màu đang có</dt>
                         <dd>{{ $product->activeVariants->pluck('color_name')->join(', ') }}</dd>
                     </div>
+                    @foreach ($product->attributeValues->groupBy(fn ($value) => $value->attribute?->name) as $attributeName => $values)
+                        @if ($attributeName)
+                            <div>
+                                <dt>{{ $attributeName }}</dt>
+                                <dd>{{ $values->pluck('label')->join(', ') }}</dd>
+                            </div>
+                        @endif
+                    @endforeach
                 </dl>
             </div>
 
@@ -207,6 +238,59 @@
                     <img src="{{ $secondaryEditorialImage->url }}" alt="{{ $secondaryEditorialImage->alt_text ?? 'Chi tiết '.$product->name }}" width="900" height="1100" loading="lazy">
                 </figure>
             @endif
+        </div>
+    </section>
+
+    <section class="product-reviews-section section" id="product-reviews" aria-labelledby="product-reviews-title">
+        <div class="shell product-reviews-layout">
+            <div class="product-review-summary" data-reveal>
+                <p class="eyebrow">Trải nghiệm thật</p>
+                <h2 id="product-reviews-title">Khách đã mua nói gì?</h2>
+                <div class="product-rating-score">
+                    <strong>{{ number_format((float) ($product->approved_reviews_average ?? 0), 1, ',', '.') }}</strong>
+                    <div><span class="review-stars" aria-label="{{ number_format((float) ($product->approved_reviews_average ?? 0), 1, ',', '.') }} trên 5 sao">{{ str_repeat('★', (int) round((float) $product->approved_reviews_average)).str_repeat('☆', 5 - (int) round((float) $product->approved_reviews_average)) }}</span><small>{{ $product->approved_reviews_count }} đánh giá đã duyệt</small></div>
+                </div>
+                <div class="rating-distribution">
+                    @foreach ([5, 4, 3, 2, 1] as $rating)
+                        @php($ratingCount = (int) ($reviewDistribution[$rating] ?? 0))
+                        <div><span>{{ $rating }} sao</span><i><b style="width: {{ $product->approved_reviews_count ? ($ratingCount / $product->approved_reviews_count) * 100 : 0 }}%"></b></i><small>{{ $ratingCount }}</small></div>
+                    @endforeach
+                </div>
+
+                @auth
+                    @if ($canReview)
+                        <form class="product-review-form" action="{{ route('catalog.products.reviews.store', $product) }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <h3>Viết đánh giá của bạn</h3>
+                            <label><span>Số sao</span><select name="rating" required><option value="5">5 — Rất hài lòng</option><option value="4">4 — Hài lòng</option><option value="3">3 — Bình thường</option><option value="2">2 — Chưa hài lòng</option><option value="1">1 — Không hài lòng</option></select></label>
+                            <label><span>Tiêu đề <small>Không bắt buộc</small></span><input name="title" value="{{ old('title') }}" maxlength="160"></label>
+                            <label><span>Chia sẻ trải nghiệm</span><textarea name="comment" rows="5" minlength="10" maxlength="3000" required>{{ old('comment') }}</textarea></label>
+                            <label><span>Ảnh thực tế <small>Tối đa 4 ảnh</small></span><input name="images[]" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
+                            <button class="button button-primary" type="submit">Gửi đánh giá</button>
+                        </form>
+                    @elseif ($viewerReview)
+                        <p class="review-pending-note">Đánh giá của bạn: <strong>{{ $viewerReview->statusLabel() }}</strong>.</p>
+                    @endif
+                @else
+                    <p class="review-pending-note"><a href="{{ route('login') }}">Đăng nhập</a> để đánh giá sản phẩm đã mua.</p>
+                @endauth
+            </div>
+
+            <div class="product-review-list" data-reveal-group>
+                @forelse ($product->reviews as $review)
+                    <article class="product-review-card" data-reveal-item>
+                        <header><div><strong>{{ $review->user->name }}</strong><span class="review-stars" aria-label="{{ $review->rating }} trên 5 sao">{{ str_repeat('★', $review->rating).str_repeat('☆', 5 - $review->rating) }}</span></div><time datetime="{{ $review->approved_at?->toDateString() }}">{{ $review->approved_at?->format('d/m/Y') }}</time></header>
+                        @if ($review->is_verified_purchase)<p class="verified-purchase">✓ Đã mua hàng tại Clare</p>@endif
+                        @if ($review->title)<h3>{{ $review->title }}</h3>@endif
+                        <p>{{ $review->comment }}</p>
+                        @if ($review->images->isNotEmpty())
+                            <div class="review-image-grid">@foreach ($review->images as $image)<a href="{{ $image->url }}" target="_blank" rel="noopener"><img src="{{ $image->url }}" alt="Ảnh đánh giá của {{ $review->user->name }}" loading="lazy"></a>@endforeach</div>
+                        @endif
+                    </article>
+                @empty
+                    <div class="review-empty-state"><span aria-hidden="true">✦</span><h3>Chưa có đánh giá được hiển thị.</h3><p>Khách đã nhận hàng sẽ có thể chia sẻ trải nghiệm thực tế tại đây.</p></div>
+                @endforelse
+            </div>
         </div>
     </section>
 
@@ -230,5 +314,13 @@
                 </div>
             </div>
         </section>
+    @endif
+
+    @if ($displayImage)
+        <dialog class="product-gallery-lightbox" data-gallery-lightbox>
+            <button type="button" aria-label="Đóng ảnh phóng to" data-gallery-lightbox-close>×</button>
+            <img src="{{ $displayImage->url }}" alt="{{ $displayImage->alt_text ?? $product->name }}" data-gallery-lightbox-image>
+            <p>Cuộn để xem toàn bộ ảnh · nhấn Esc để đóng</p>
+        </dialog>
     @endif
 @endsection

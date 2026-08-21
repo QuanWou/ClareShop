@@ -151,6 +151,8 @@
             </button>
         </form>
 
+        @include('customers.auth.partials.social-login')
+
         <p class="auth-security-note"><span aria-hidden="true"></span>Mật khẩu được mã hóa; Clare không lưu mật khẩu ở dạng có thể đọc.</p>
         <p class="auth-switch">Đã có tài khoản? <a href="{{ route('login') }}">Đăng nhập</a></p>
     </x-auth-shell>

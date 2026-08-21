@@ -63,6 +63,32 @@
                         <p class="eyebrow">02 / Giao hàng</p>
                         <h2 id="checkout-shipping-title">Địa chỉ nhận hàng</h2>
 
+                        @if ($savedAddresses->isNotEmpty())
+                            <div class="checkout-saved-addresses" aria-label="Địa chỉ đã lưu">
+                                @foreach ($savedAddresses as $address)
+                                    <label class="checkout-saved-address">
+                                        <input
+                                            type="radio"
+                                            name="saved_address"
+                                            value="{{ $address->getKey() }}"
+                                            @checked($address->is_default)
+                                            data-saved-address
+                                            data-recipient-name="{{ $address->recipient_name }}"
+                                            data-phone="{{ $address->phone }}"
+                                            data-address-line-1="{{ $address->address_line_1 }}"
+                                            data-address-line-2="{{ $address->address_line_2 }}"
+                                            data-ward="{{ $address->ward }}"
+                                            data-district="{{ $address->district }}"
+                                            data-city="{{ $address->city }}"
+                                            data-postal-code="{{ $address->postal_code }}"
+                                        >
+                                        <span><strong>{{ $address->label }} @if ($address->is_default)<small>Mặc định</small>@endif</strong><b>{{ $address->recipient_name }} · {{ $address->phone }}</b><small>{{ $address->address_line_1 }}, {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}</small></span>
+                                    </label>
+                                @endforeach
+                                <label class="checkout-saved-address"><input type="radio" name="saved_address" value="custom"><span><strong>Địa chỉ khác</strong><small>Nhập thông tin nhận hàng cho riêng đơn này.</small></span></label>
+                            </div>
+                        @endif
+
                         <div class="checkout-form-grid">
                             <label class="checkout-field checkout-field-full">
                                 <span>Tên người nhận</span>
@@ -101,7 +127,7 @@
 
                             <label class="checkout-field checkout-field-full">
                                 <span>Địa chỉ bổ sung <small>Không bắt buộc</small></span>
-                                <input name="shipping_address_line_2" value="{{ old('shipping_address_line_2', $defaultAddress?->address_line_2) }}" autocomplete="shipping address-line2">
+                                <input name="shipping_address_line_2" value="{{ old('shipping_address_line_2', $defaultAddress?->address_line_2) }}" autocomplete="shipping address-line2" data-shipping-field>
                             </label>
                         </div>
 
@@ -225,7 +251,7 @@
                     <p class="checkout-quote-status" aria-live="polite" data-checkout-quote-status>Hoàn thiện địa chỉ để so sánh phí GHN, GHTK, J&amp;T Express, xem ngày nhận dự kiến và kiểm tra mã ưu đãi.</p>
                     <button class="checkout-quote-button" type="button" data-checkout-quote>So sánh phí giao hàng và áp dụng ưu đãi</button>
                     <button class="button button-primary button-wide" type="submit">Đặt đơn hàng</button>
-                    <p class="checkout-security-note">Phí ship hiện là ước tính nội bộ theo địa chỉ, khối lượng và đơn vị đã chọn; chưa phải báo giá chính thức của GHN, GHTK hoặc J&amp;T Express. Tổng tiền và ưu đãi luôn được tính lại tại máy chủ khi đặt đơn.</p>
+                    <p class="checkout-security-note">{{ $siteSettings->get('shipping_note') }} {{ $siteSettings->get('payment_note') }} Tổng tiền và ưu đãi luôn được tính lại tại máy chủ khi đặt đơn.</p>
                 </aside>
             </form>
         </div>

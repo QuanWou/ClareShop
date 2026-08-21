@@ -4,18 +4,21 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Modules\Appointments\Models\Appointment;
+use App\Modules\Catalog\Models\Product;
+use App\Modules\Catalog\Models\ProductReview;
 use App\Modules\Customers\Models\UserAddress;
 use App\Modules\Orders\Models\Order;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'phone', 'role', 'is_active', 'password'])]
+#[Fillable(['name', 'email', 'google_id', 'facebook_id', 'avatar_url', 'phone', 'role', 'is_active', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -51,6 +54,24 @@ class User extends Authenticatable
     public function addresses(): HasMany
     {
         return $this->hasMany(UserAddress::class);
+    }
+
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function wishlistProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'wishlists')->withTimestamps();
+    }
+
+    public function recentlyViewedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'recently_viewed_products')
+            ->withPivot('viewed_at')
+            ->orderByPivot('viewed_at', 'desc')
+            ->withTimestamps();
     }
 
     public function isAdmin(): bool

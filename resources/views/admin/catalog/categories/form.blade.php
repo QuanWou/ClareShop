@@ -18,7 +18,20 @@
                 <div class="admin-form-grid">
                     <label><span>Tên danh mục</span><input name="name" value="{{ old('name', $category->name) }}" required></label>
                     <label><span>Slug <small>Để trống để tự tạo từ tên</small></span><input name="slug" value="{{ old('slug', $category->slug) }}" placeholder="den-de-ban"></label>
+                    <label>
+                        <span>Danh mục cha <small>Để trống nếu là nhóm gốc</small></span>
+                        <select name="parent_id">
+                            <option value="">Danh mục gốc</option>
+                            @foreach ($parentCategories as $parentCategory)
+                                <option value="{{ $parentCategory->getKey() }}" @selected((string) old('parent_id', $category->parent_id) === (string) $parentCategory->getKey())>
+                                    {{ str_repeat('— ', (int) $parentCategory->tree_depth) }}{{ $parentCategory->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </label>
                     <label class="admin-form-full"><span>Mô tả</span><textarea name="description" rows="5" maxlength="5000">{{ old('description', $category->description) }}</textarea></label>
+                    <label><span>SEO title <small>Tối đa 255 ký tự</small></span><input name="seo_title" maxlength="255" value="{{ old('seo_title', $category->seo_title) }}"></label>
+                    <label><span>SEO description <small>Tối đa 500 ký tự</small></span><textarea name="seo_description" rows="3" maxlength="500">{{ old('seo_description', $category->seo_description) }}</textarea></label>
                     <label><span>Thứ tự hiển thị</span><input name="sort_order" type="number" min="0" value="{{ old('sort_order', $category->exists ? $category->sort_order : 0) }}" required></label>
                     <label><span>Ảnh danh mục <small>Không bắt buộc</small></span><input name="category_image" type="file" accept="image/jpeg,image/png,image/webp">@if($category->image_path)<small>Ảnh hiện tại: {{ $category->image_path }}</small>@endif</label>
                     <label><span>Hiển thị</span><input name="is_active" type="hidden" value="0"><span class="admin-checkbox"><input name="is_active" type="checkbox" value="1" @checked(old('is_active', $category->exists ? $category->is_active : true))> Hiển thị danh mục tại cửa hàng</span></label>

@@ -75,6 +75,8 @@
             </button>
         </form>
 
+        @include('customers.auth.partials.social-login')
+
         <p class="auth-security-note"><span aria-hidden="true"></span>Phiên đăng nhập được bảo vệ và giới hạn các lần thử không hợp lệ.</p>
         <p class="auth-switch">Chưa có tài khoản? <a href="{{ route('register') }}">Tạo tài khoản</a></p>
     </x-auth-shell>

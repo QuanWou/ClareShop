@@ -184,6 +184,7 @@ class CatalogSeeder extends Seeder
 
         $this->call(SupplementalCatalogSeeder::class);
         $this->call(NewArrivalCatalogSeeder::class);
+        $this->call(CatalogTaxonomySeeder::class);
     }
 
     private function seedProduct(
@@ -196,6 +197,7 @@ class CatalogSeeder extends Seeder
             ['slug' => $product['slug']],
             ['category_id' => $category->getKey(), ...$product],
         );
+        $productModel->categories()->syncWithoutDetaching([$category->getKey()]);
 
         foreach ($variants as $variant) {
             $productModel->variants()->updateOrCreate(

@@ -44,10 +44,20 @@
 
     </a>
 
+    @auth
+        <form class="product-card-wishlist" action="{{ route('wishlist.toggle', $product) }}" method="POST" data-wishlist-form>
+            @csrf
+            <button type="submit" aria-label="{{ $product->is_wishlisted ?? false ? 'Bỏ khỏi yêu thích' : 'Thêm vào yêu thích' }}" aria-pressed="{{ $product->is_wishlisted ?? false ? 'true' : 'false' }}" data-wishlist-button>
+                <span aria-hidden="true">{{ $product->is_wishlisted ?? false ? '♥' : '♡' }}</span>
+            </button>
+        </form>
+    @endauth
+
     <div class="product-card-copy">
         <div>
             <p class="product-category">{{ $product->category?->name }}</p>
             <h3><a href="{{ route('catalog.products.show', $product) }}">{{ $product->name }}</a></h3>
+            @if (($product->approved_reviews_count ?? 0) > 0)<p class="product-card-rating"><span aria-hidden="true">★</span> {{ number_format((float) $product->approved_reviews_average, 1, ',', '.') }} · {{ $product->approved_reviews_count }} đánh giá</p>@endif
             <p class="product-card-description">{{ $product->short_description }}</p>
         </div>
 

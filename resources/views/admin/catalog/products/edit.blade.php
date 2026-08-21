@@ -12,7 +12,7 @@
                 <div class="admin-form-grid">
                     <label><span>Tên sản phẩm</span><input name="name" value="{{ old('name', $product->name) }}" required></label>
                     <label><span>Slug</span><input name="slug" value="{{ old('slug', $product->slug) }}"></label>
-                    <label><span>Danh mục</span><select name="category_id"><option value="">Chưa phân loại</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected((string) old('category_id', $product->category_id) === (string) $category->id)>{{ $category->name }}</option>@endforeach</select></label>
+                    @include('admin.catalog.products.partials.taxonomy-fields', ['product' => $product])
                     <label><span>Xuất bản lúc <small>Để trống để lưu nháp</small></span><input name="published_at" type="datetime-local" value="{{ old('published_at', $product->published_at?->format('Y-m-d\\TH:i')) }}"></label>
                     <label><span>Chất liệu</span><input name="material" value="{{ old('material', $product->material) }}"></label>
                     <label><span>Kích thước</span><input name="dimensions" value="{{ old('dimensions', $product->dimensions) }}"></label>

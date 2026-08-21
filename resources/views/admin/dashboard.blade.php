@@ -20,9 +20,11 @@
         </div>
 
         <div class="admin-value-strip admin-value-strip-wide">
+            <div><span>Doanh thu hôm nay</span><strong>{{ \App\Modules\Shared\Support\Money::formatVnd($metrics['todayRevenue']) }}</strong></div>
+            <div><span>Doanh thu tháng này</span><strong>{{ \App\Modules\Shared\Support\Money::formatVnd($metrics['monthRevenue']) }}</strong></div>
             <div><span>Giá trị đơn chưa hủy</span><strong>{{ \App\Modules\Shared\Support\Money::formatVnd($metrics['activeOrderValue']) }}</strong></div>
             <div><span>Đã đối soát thanh toán</span><strong>{{ \App\Modules\Shared\Support\Money::formatVnd($metrics['paidRevenue']) }}</strong></div>
-            <p>Chỉ số đối soát chỉ tính các đơn có payment đã ghi nhận là đã thanh toán, không phải doanh thu kế toán cuối kỳ.</p>
+            <p>{{ $metrics['productsSold'] }} sản phẩm đã bán. Chỉ số đối soát chỉ tính các đơn có payment đã ghi nhận là đã thanh toán, không phải doanh thu kế toán cuối kỳ.</p>
         </div>
 
         <div class="admin-analytics-grid">

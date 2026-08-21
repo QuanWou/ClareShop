@@ -2,10 +2,12 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,12 +17,15 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
+        'brand_id',
         'name',
         'slug',
         'short_description',
         'description',
         'material',
         'dimensions',
+        'seo_title',
+        'seo_description',
         'is_active',
         'is_featured',
         'published_at',
@@ -32,6 +37,7 @@ class Product extends Model
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'published_at' => 'datetime',
+            'sold_count' => 'integer',
         ];
     }
 
@@ -75,6 +81,45 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class)
+            ->orderBy('sort_order')
+            ->orderBy('name');
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function attributeValues(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ProductAttributeValue::class,
+            'attribute_value_product',
+            'product_id',
+            'product_attribute_value_id',
+        );
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function wishlistedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'wishlists')->withTimestamps();
+    }
+
+    public function recentlyViewedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'recently_viewed_products')
+            ->withPivot('viewed_at')
+            ->withTimestamps();
     }
 
     public function variants(): HasMany
