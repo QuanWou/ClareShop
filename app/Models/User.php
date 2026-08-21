@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['name', 'email', 'phone', 'role', 'is_active', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -32,6 +32,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'is_active' => 'boolean',
+            'last_order_at' => 'datetime',
+            'total_spent' => 'decimal:2',
             'password' => 'hashed',
         ];
     }

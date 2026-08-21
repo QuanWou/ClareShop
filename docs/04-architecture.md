@@ -39,7 +39,7 @@ app/Modules/
 | Cart | Cart, CartItem, token giỏ khách vãng lai, thao tác thêm/sửa/xóa |
 | Orders | Checkout, transaction tồn kho, Order, OrderItem, chuyển trạng thái |
 | Appointments | Lịch tư vấn/lắp đặt và thông báo nội bộ sau này |
-| Customers | Hồ sơ khách, lịch sử đơn và yêu cầu sau đăng nhập |
+| Customers | Hồ sơ khách, lịch sử đơn và yêu cầu sau đăng nhập; truy vấn tổng hợp phục vụ danh sách/hồ sơ khách trong back office |
 | Content | Nội dung biên tập và asset thương hiệu dùng chung trên storefront; registry khóa/trường tại config và lịch sử người cập nhật gần nhất |
 | Shared | Enum, money formatter, support dùng thật sự ở nhiều module |
 

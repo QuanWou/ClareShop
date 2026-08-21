@@ -74,3 +74,4 @@ V1 có năm phương thức thanh toán:
 - Khi xây back office, thêm vai trò người dùng rõ ràng; không dùng điều kiện rải rác theo email trong controller.
 - Xóa sản phẩm hoặc biến thể trong back office là lưu trữ mềm; không được xóa snapshot trên `order_items`, lịch sử tồn kho hoặc dữ liệu audit. Sản phẩm/biến thể đã lưu trữ không thể được đặt hàng mới.
 - Admin có thể đổi `role` giữa `customer` và `admin`, hoặc khóa tài khoản bằng `is_active`; hệ thống không cho tự gỡ quyền của phiên đang đăng nhập và phải luôn còn ít nhất một admin đang hoạt động.
+- Trong quản lý khách hàng, `tổng số đơn` đếm mọi đơn gắn với tài khoản ở mọi trạng thái để bảo toàn lịch sử; `tổng tiền đã mua` chỉ cộng `total` của các đơn có trạng thái `completed`. Đơn chờ xử lý hoặc đã hủy không được tính vào giá trị đã mua.

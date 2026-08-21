@@ -23,7 +23,7 @@
                     <a @class(['is-current' => request()->routeIs('admin.catalog.categories.*')]) href="{{ route('admin.catalog.categories.index') }}">Danh mục</a>
                     <a @class(['is-current' => request()->routeIs('admin.promotions.*')]) href="{{ route('admin.promotions.index') }}">Mã ưu đãi</a>
                     <a @class(['is-current' => request()->routeIs('admin.content.*')]) href="{{ route('admin.content.edit') }}">Nội dung website</a>
-                    <a @class(['is-current' => request()->routeIs('admin.users.*')]) href="{{ route('admin.users.index') }}">Tài khoản</a>
+                    <a @class(['is-current' => request()->routeIs('admin.users.*')]) href="{{ route('admin.users.index') }}">Khách hàng</a>
                     <a @class(['is-current' => request()->routeIs('admin.appointments.*')]) href="{{ route('admin.appointments.index') }}">Tư vấn &amp; lắp đặt</a>
                 </nav>
 

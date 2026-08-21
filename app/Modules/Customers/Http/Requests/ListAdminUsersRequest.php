@@ -17,6 +17,7 @@ class ListAdminUsersRequest extends FormRequest
             'q' => ['nullable', 'string', 'max:100'],
             'role' => ['nullable', 'in:customer,admin'],
             'status' => ['nullable', 'in:active,inactive'],
+            'sort' => ['nullable', 'in:newest,spent_desc,orders_desc,last_order_desc'],
         ];
     }
 }

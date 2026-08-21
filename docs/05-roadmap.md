@@ -70,7 +70,7 @@
 
 1. Đã có authentication session nguyên bản của Laravel: đăng ký, đăng nhập, đăng xuất, rate limit đăng nhập, kiểm tra `is_active` và hợp nhất giỏ khách sau login. Trang đăng nhập/đăng ký đã có giao diện thương hiệu responsive, validation hai lớp, chỉ báo độ mạnh và thao tác hiện/ẩn mật khẩu.
 2. Đã thêm trang Tài khoản cơ bản để khách xem các đơn/yêu cầu được tạo khi đã đăng nhập.
-3. Đã có role gate `admin`, dashboard vận hành có biểu đồ/chỉ số, back office Order/Appointment, CRUD Catalog (danh mục, sản phẩm, biến thể, ảnh), quản lý mã ưu đãi và quyền/trạng thái tài khoản. Catalog archive mềm để giữ audit đơn hàng.
+3. Đã có role gate `admin`, dashboard vận hành có biểu đồ/chỉ số, back office Order/Appointment, CRUD Catalog (danh mục, sản phẩm, biến thể, ảnh), quản lý mã ưu đãi và module khách hàng. Admin có thể tìm/lọc/sắp xếp khách, xem thông tin liên hệ, trạng thái tài khoản, tổng đơn, tổng tiền từ đơn hoàn tất, đơn gần đây và địa chỉ đã lưu; quyền cập nhật/khóa/xóa an toàn hiện có vẫn được giữ. Catalog archive mềm để giữ audit đơn hàng.
 4. Đã có module Content và trang `/admin/content` để sửa nội dung/ảnh biên tập của storefront; dữ liệu sản phẩm/danh mục tiếp tục sửa qua Catalog Admin và nội dung trạng thái/validation vẫn cố định theo nghiệp vụ.
 
 ## Phase 7 — Chất lượng và triển khai
