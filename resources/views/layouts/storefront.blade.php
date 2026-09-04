@@ -25,37 +25,51 @@
             $lampNavigationGroups = $lampNavigationRoot
                 ? $navigationCategories->where('parent_id', $lampNavigationRoot->getKey())
                 : $navigationCategories->where('tree_depth', 0);
+            $featuredNavigationCategory = $navigationCategories->firstWhere('slug', 'den-phong-ngu');
         @endphp
         <a class="skip-link" href="#main-content">Đi đến nội dung chính</a>
-
-        <div class="announcement" role="note">
-            <p>{{ $siteContent->get('global_announcement') }}</p>
-        </div>
 
         <header class="site-header">
             <div class="shell header-inner">
                 <a class="wordmark" href="{{ route('catalog.home') }}" aria-label="{{ $siteSettings->get('store_name') }} — về trang chủ">@if ($siteSettings->configured('logo_path'))<img class="site-logo" src="{{ asset('storage/'.$siteSettings->get('logo_path')) }}" alt="{{ $siteSettings->get('store_name') }}">@else{{ $siteSettings->get('store_name') }}@endif</a>
 
                 <nav class="desktop-nav" aria-label="Điều hướng chính">
-                    <details class="nav-menu">
+                    <details class="nav-menu nav-menu-taxonomy">
                         <summary aria-expanded="false">Đèn</summary>
                         <div class="nav-dropdown nav-taxonomy-dropdown">
-                            <a class="nav-taxonomy-all" href="{{ route('catalog.products.index') }}">Tất cả đèn <span aria-hidden="true">↗</span></a>
-                            @foreach ($lampNavigationGroups as $navigationGroup)
-                                <section>
-                                    <a href="{{ route('catalog.collections.show', $navigationGroup) }}">{{ $navigationGroup->name }}</a>
-                                    <div>
-                                        @forelse ($navigationCategories->where('parent_id', $navigationGroup->getKey()) as $navigationCategory)
-                                            <a href="{{ route('catalog.collections.show', $navigationCategory) }}">{{ $navigationCategory->name }}</a>
-                                            @foreach ($navigationCategories->where('parent_id', $navigationCategory->getKey()) as $nestedNavigationCategory)
-                                                <a class="nav-taxonomy-nested" href="{{ route('catalog.collections.show', $nestedNavigationCategory) }}">{{ $nestedNavigationCategory->name }}</a>
-                                            @endforeach
-                                        @empty
-                                            <span>Danh mục đang được cập nhật</span>
-                                        @endforelse
-                                    </div>
-                                </section>
-                            @endforeach
+                            <a class="nav-taxonomy-feature" href="{{ $featuredNavigationCategory ? route('catalog.collections.show', $featuredNavigationCategory) : route('catalog.products.index') }}">
+                                <span class="nav-taxonomy-feature-copy">
+                                    <small>{{ $siteContent->get('global_navigation_eyebrow') }}</small>
+                                    <strong>{{ $siteContent->get('global_navigation_title') }}</strong>
+                                    <span>{{ $siteContent->get('global_navigation_cta') }} <span aria-hidden="true">↗</span></span>
+                                </span>
+                                <img src="{{ $siteContent->asset('global_navigation_image') }}" alt="" aria-hidden="true">
+                            </a>
+
+                            <div class="nav-taxonomy-directory">
+                                <div class="nav-taxonomy-heading">
+                                    <span>Khám phá theo nhu cầu</span>
+                                    <a class="nav-taxonomy-all" href="{{ route('catalog.products.index') }}">Xem tất cả đèn <span aria-hidden="true">↗</span></a>
+                                </div>
+
+                                <div class="nav-taxonomy-groups">
+                                    @foreach ($lampNavigationGroups as $navigationGroup)
+                                        <section>
+                                            <a href="{{ route('catalog.collections.show', $navigationGroup) }}">{{ $navigationGroup->name }}</a>
+                                            <div>
+                                                @forelse ($navigationCategories->where('parent_id', $navigationGroup->getKey()) as $navigationCategory)
+                                                    <a href="{{ route('catalog.collections.show', $navigationCategory) }}">{{ $navigationCategory->name }}</a>
+                                                    @foreach ($navigationCategories->where('parent_id', $navigationCategory->getKey()) as $nestedNavigationCategory)
+                                                        <a class="nav-taxonomy-nested" href="{{ route('catalog.collections.show', $nestedNavigationCategory) }}">{{ $nestedNavigationCategory->name }}</a>
+                                                    @endforeach
+                                                @empty
+                                                    <span>Danh mục đang được cập nhật</span>
+                                                @endforelse
+                                            </div>
+                                        </section>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </details>
 
@@ -71,6 +85,7 @@
                         <summary aria-expanded="false">Khám phá</summary>
                         <div class="nav-dropdown">
                             <a href="{{ route('catalog.home') }}#collections">Bộ sưu tập</a>
+                            <a href="{{ route('promotions.index') }}">Ưu đãi & Voucher</a>
                             <a href="{{ route('catalog.home') }}#about">Về Clare</a>
                         </div>
                     </details>
@@ -140,6 +155,7 @@
                             @endforeach
                             <a href="{{ route('appointments.create') }}">Tư vấn</a>
                             <a href="{{ route('blog.index') }}">Cảm hứng</a>
+                            <a href="{{ route('promotions.index') }}">Ưu đãi & Voucher</a>
                             @auth
                                 <a href="{{ route('account.show') }}">Tài khoản</a>
                                 <form class="mobile-logout-form" action="{{ route('logout') }}" method="POST">
@@ -190,6 +206,7 @@
                     <p class="footer-label">Khám phá</p>
                     <a href="{{ route('catalog.home') }}#collections">Bộ sưu tập</a>
                     <a href="{{ route('catalog.home') }}#selected">Sản phẩm được chọn</a>
+                    <a href="{{ route('promotions.index') }}">Ưu đãi & Voucher</a>
                 </div>
 
                 <div>

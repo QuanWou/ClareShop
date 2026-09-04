@@ -8,6 +8,7 @@ use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderDiscount;
 use App\Modules\Orders\Models\OrderStatusHistory;
 use App\Modules\Promotions\Models\PromotionCode;
+use App\Modules\Promotions\Actions\ReleaseOrderVoucherAction;
 use App\Modules\Settings\Actions\ConfigureStoreMailAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -16,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class TransitionOrderStatusAction
 {
-    public function __construct(private readonly ConfigureStoreMailAction $configureMail) {}
+    public function __construct(
+        private readonly ConfigureStoreMailAction $configureMail,
+        private readonly ReleaseOrderVoucherAction $releaseVoucher,
+    ) {}
 
     private const ALLOWED_TRANSITIONS = [
         'pending' => ['confirmed', 'cancelled'],
@@ -27,7 +31,7 @@ class TransitionOrderStatusAction
 
     public function execute(
         Order $order,
-        int $actorId,
+        ?int $actorId,
         string $nextStatus,
         ?string $note,
         ?string $cancelReason,
@@ -44,7 +48,7 @@ class TransitionOrderStatusAction
             if ($nextStatus === 'cancelled') {
                 $this->ensureCancellationIsAllowed($lockedOrder);
                 $this->restoreInventory($lockedOrder, $actorId);
-                $this->restorePromotionUsage($lockedOrder);
+                $this->restorePromotionUsage($lockedOrder, $cancelReason ?: 'Đơn hàng đã bị hủy.');
             }
 
             $attributes = [
@@ -121,7 +125,7 @@ class TransitionOrderStatusAction
         }
     }
 
-    private function restoreInventory(Order $order, int $actorId): void
+    private function restoreInventory(Order $order, ?int $actorId): void
     {
         foreach ($order->items as $item) {
             $variant = ProductVariant::withTrashed()
@@ -153,8 +157,14 @@ class TransitionOrderStatusAction
         }
     }
 
-    private function restorePromotionUsage(Order $order): void
+    private function restorePromotionUsage(Order $order, string $reason): void
     {
+        if ($this->releaseVoucher->execute($order, $reason)) {
+            return;
+        }
+
+        // Các đơn tạo trước khi có reservation đã tăng usage_count ngay lúc checkout.
+        // Giữ nhánh này để hủy các đơn lịch sử vẫn hoàn đúng lượt sử dụng cũ.
         $discount = OrderDiscount::query()
             ->where('order_id', $order->getKey())
             ->lockForUpdate()

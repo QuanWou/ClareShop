@@ -8,6 +8,7 @@ use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductReview;
 use App\Modules\Customers\Models\UserAddress;
 use App\Modules\Orders\Models\Order;
+use App\Modules\Promotions\Models\UserVoucher;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -44,6 +45,11 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(UserVoucher::class);
     }
 
     public function appointments(): HasMany

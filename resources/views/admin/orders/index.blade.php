@@ -28,7 +28,7 @@
                 <span>Thanh toán</span>
                 <select name="payment_status">
                     <option value="">Tất cả</option>
-                    @foreach (['unpaid' => 'Chưa thanh toán', 'pending' => 'Chờ đối soát', 'paid' => 'Đã thanh toán', 'refunded' => 'Đã hoàn tiền'] as $value => $label)
+                    @foreach (['unpaid' => 'Chưa thanh toán', 'pending' => 'Chờ đối soát', 'paid' => 'Đã thanh toán', 'refunded' => 'Đã hoàn tiền', 'failed' => 'Thanh toán thất bại', 'expired' => 'Đã hết hạn'] as $value => $label)
                         <option value="{{ $value }}" @selected(($filters['payment_status'] ?? null) === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
@@ -55,7 +55,7 @@
                             <td><strong>{{ $order->customer_name }}</strong><span>{{ $order->customer_phone }}</span></td>
                             <td>{{ $order->placed_at?->format('H:i · d/m/Y') }}</td>
                             <td><span class="admin-status admin-status-{{ $order->status }}">{{ $order->statusLabel() }}</span></td>
-                            <td><span class="admin-status admin-payment-{{ $order->payment_status }}">{{ $order->payment_status === 'pending' ? 'Chờ đối soát' : ($order->payment_status === 'unpaid' ? 'Chưa thanh toán' : ($order->payment_status === 'paid' ? 'Đã thanh toán' : 'Đã hoàn tiền')) }}</span></td>
+                            <td><span class="admin-status admin-payment-{{ $order->payment_status }}">{{ $order->paymentStatusLabel() }}</span></td>
                             <td><strong>{{ \App\Modules\Shared\Support\Money::formatVnd($order->total) }}</strong></td>
                         </tr>
                     @empty

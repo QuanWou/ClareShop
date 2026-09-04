@@ -73,4 +73,10 @@ class ProductVariant extends Model
         return $this->compare_at_price !== null
             && (float) $this->compare_at_price > (float) $this->price;
     }
+
+    /** Return the first variant image URL for compact storefront contexts. */
+    public function imageUrl(): string
+    {
+        return (string) ($this->images->first()?->url ?? $this->product?->images->first()?->url ?? '');
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Modules\Orders\Models;
 
 use App\Models\User;
+use App\Modules\Promotions\Models\VoucherReservation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -55,6 +56,7 @@ class Order extends Model
         'shipped_at',
         'delivered_at',
         'cancelled_at',
+        'confirmation_email_sent_at',
     ];
 
     protected function casts(): array
@@ -73,6 +75,7 @@ class Order extends Model
             'shipped_at' => 'datetime',
             'delivered_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'confirmation_email_sent_at' => 'datetime',
         ];
     }
 
@@ -101,6 +104,11 @@ class Order extends Model
         return $this->hasOne(OrderDiscount::class);
     }
 
+    public function voucherReservation(): HasOne
+    {
+        return $this->hasOne(VoucherReservation::class);
+    }
+
     public function statusLabel(): string
     {
         return self::statusLabelFor($this->status);
@@ -126,8 +134,22 @@ class Order extends Model
             'pending' => 'Chờ thanh toán/xét duyệt',
             'paid' => 'Đã thanh toán',
             'refunded' => 'Đã hoàn tiền',
+            'failed' => 'Thanh toán thất bại',
+            'expired' => 'Đã hết hạn thanh toán',
             default => $this->payment_status,
         };
+    }
+
+    public function canCustomerChangePaymentMethod(): bool
+    {
+        return $this->status === 'pending'
+            && (in_array($this->payment_status, ['unpaid', 'failed', 'expired'], true)
+                || ($this->payment_method === 'pay_later' && $this->payment_status === 'pending'));
+    }
+
+    public function canCustomerCancel(): bool
+    {
+        return $this->canCustomerChangePaymentMethod();
     }
 
     public function estimatedDeliveryDate(): ?Carbon

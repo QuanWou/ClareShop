@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Admin\Actions\ListAdminCatalogAttributesAction;
 use App\Modules\Catalog\Actions\CreateCatalogAttributeAction;
 use App\Modules\Catalog\Actions\CreateCatalogAttributeValueAction;
+use App\Modules\Catalog\Actions\DeleteCatalogAttributeAction;
 use App\Modules\Catalog\Actions\DeleteCatalogAttributeValueAction;
 use App\Modules\Catalog\Actions\UpdateCatalogAttributeAction;
 use App\Modules\Catalog\Actions\UpdateCatalogAttributeValueAction;
@@ -52,6 +53,13 @@ class AdminCatalogAttributeController extends Controller
         $updateAttribute->execute($attribute, $request->validated());
 
         return redirect()->route('admin.catalog.attributes.edit', $attribute)->with('success', 'Thuộc tính đã được cập nhật.');
+    }
+
+    public function destroy(ProductAttribute $attribute, DeleteCatalogAttributeAction $deleteAttribute): RedirectResponse
+    {
+        $deleteAttribute->execute($attribute);
+
+        return redirect()->route('admin.catalog.attributes.index')->with('success', 'Thuộc tính và các giá trị chưa dùng đã được xóa.');
     }
 
     public function storeValue(

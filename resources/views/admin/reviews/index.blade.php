@@ -22,6 +22,10 @@
                     <label class="admin-field-grow"><span>Ghi chú kiểm duyệt</span><input name="moderation_note" value="{{ $review->moderation_note }}" maxlength="1000"></label>
                     <button class="admin-button admin-button-primary" type="submit">Lưu</button>
                 </form>
+                <form class="admin-inline-delete" action="{{ route('admin.reviews.destroy', $review) }}" method="POST" onsubmit="return confirm('Xóa vĩnh viễn đánh giá và ảnh đính kèm này? Thao tác không thể hoàn tác.')">
+                    @csrf @method('DELETE')
+                    <button type="submit">Xóa đánh giá</button>
+                </form>
             </article>
         @empty
             <div class="admin-empty-state"><h2>Không có đánh giá phù hợp.</h2></div>

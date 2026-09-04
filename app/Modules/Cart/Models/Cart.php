@@ -35,4 +35,9 @@ class Cart extends Model
     {
         return $this->hasMany(CartItem::class)->orderBy('created_at');
     }
+
+    public function selectedItems(): HasMany
+    {
+        return $this->items()->where('is_selected', true);
+    }
 }

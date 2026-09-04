@@ -52,7 +52,7 @@ Tham khảo cảm giác mềm, sáng và giàu không gian của Clare.com: nề
 
 ### Checkout
 
-- Khách vãng lai được giữ giỏ; khi chọn checkout phải được chuyển đến đăng nhập/đăng ký rồi quay lại checkout. Checkout có form liên hệ gắn tài khoản, địa chỉ giao hàng, chọn COD hoặc chuyển khoản VietQR và tóm tắt đơn sticky trên desktop.
+- Khách vãng lai được giữ giỏ; khi chọn checkout phải được chuyển đến đăng nhập/đăng ký rồi quay lại checkout. Checkout có form liên hệ gắn tài khoản, địa chỉ giao hàng, chọn COD hoặc QR ngân hàng payOS và tóm tắt đơn sticky trên desktop.
 - Phí ship hiện là ước tính động theo địa chỉ/tổng trọng lượng; hiển thị rõ trạng thái ước tính và tính lại tại server khi tạo đơn.
 - Trang xác nhận đơn chỉ chủ đơn đã đăng nhập mới truy cập được, ngay cả khi có signed URL tạm thời. Với chuyển khoản, hiển thị QR có đúng tổng tiền/mã đơn nhưng không tuyên bố thanh toán đã thành công trước đối soát.
 

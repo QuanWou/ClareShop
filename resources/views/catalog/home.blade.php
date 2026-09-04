@@ -70,16 +70,63 @@
                 <p>{{ $siteContent->get('home_collections_description') }}</p>
             </div>
 
+            @php
+                $collectionImagePool = collect($collectionImagePool ?? []);
+            @endphp
+
             <div class="collection-grid" data-reveal-group>
                 @forelse ($categories as $category)
-                    <a class="collection-card" href="{{ route('catalog.collections.show', $category) }}" data-reveal-item>
-                        <img
-                            src="{{ asset($category->image_path) }}"
-                            alt=""
-                            loading="lazy"
-                            width="900"
-                            height="900"
-                        >
+                    @php
+                        $collectionImages = $collectionImagePool;
+
+                        if ($category->image_path) {
+                            $collectionImages = $collectionImages->prepend($category->image_path);
+                        }
+
+                        $collectionImages = $collectionImages->filter()->unique()->values();
+                        $rotationOffset = $collectionImages->count() > 1
+                            ? ($loop->index * max(1, (int) floor($collectionImages->count() / 6))) % $collectionImages->count()
+                            : 0;
+                        $collectionImages = $collectionImages->slice($rotationOffset)
+                            ->concat($collectionImages->slice(0, $rotationOffset))
+                            ->values()
+                            ->map(fn (string $path): string => asset($path));
+
+                        if ($category->image_path) {
+                            $primaryImage = asset($category->image_path);
+                            $collectionImages = collect([$primaryImage])
+                                ->merge($collectionImages->reject(fn (string $path): bool => $path === $primaryImage))
+                                ->values();
+                        }
+                    @endphp
+
+                    <a
+                        class="collection-card"
+                        href="{{ route('catalog.collections.show', $category) }}"
+                        data-reveal-item
+                        data-collection-card
+                        data-collection-images='@json($collectionImages)'
+                        data-collection-interval="{{ 2400 + (($loop->index % 5) * 180) }}"
+                        data-collection-transition="{{ ['fade', 'slide', 'zoom', 'lift', 'blur', 'wipe'][$loop->index % 6] }}"
+                    >
+                        @if ($collectionImages->isNotEmpty())
+                            <span class="collection-media" aria-hidden="true">
+                                @foreach ($collectionImages->take(2) as $frameIndex => $collectionImage)
+                                    <img
+                                        src="{{ $collectionImage }}"
+                                        alt=""
+                                        loading="lazy"
+                                        width="900"
+                                        height="900"
+                                        data-collection-image
+                                        data-collection-layer="{{ $frameIndex }}"
+                                        @class(['is-active' => $frameIndex === 0])
+                                    >
+                                @endforeach
+                            </span>
+                        @else
+                            <span class="image-placeholder" aria-hidden="true"></span>
+                        @endif
                         <span class="collection-overlay" aria-hidden="true"></span>
                         <span class="collection-copy">
                             <small>{{ $category->published_products_count }} mẫu đèn</small>

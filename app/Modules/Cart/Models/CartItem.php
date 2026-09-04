@@ -15,12 +15,14 @@ class CartItem extends Model
         'cart_id',
         'product_variant_id',
         'quantity',
+        'is_selected',
     ];
 
     protected function casts(): array
     {
         return [
             'quantity' => 'integer',
+            'is_selected' => 'boolean',
         ];
     }
 

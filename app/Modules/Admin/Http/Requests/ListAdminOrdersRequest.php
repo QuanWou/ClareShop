@@ -15,7 +15,7 @@ class ListAdminOrdersRequest extends FormRequest
     {
         return [
             'status' => ['nullable', 'in:pending,confirmed,processing,shipped,completed,cancelled'],
-            'payment_status' => ['nullable', 'in:unpaid,pending,paid,refunded'],
+            'payment_status' => ['nullable', 'in:unpaid,pending,paid,refunded,failed,expired'],
             'q' => ['nullable', 'string', 'max:80'],
         ];
     }

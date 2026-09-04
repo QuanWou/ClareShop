@@ -48,7 +48,7 @@ app/Modules/
 | Blog | Bài viết, danh mục, thẻ, trạng thái xuất bản và liên kết sản phẩm |
 | Media | Upload, tra cứu và xóa asset ảnh dùng trong back office |
 | Settings | Cấu hình cửa hàng, giao diện, SEO, SMTP và OAuth; bí mật được mã hóa |
-| Promotions | Quy tắc mã ưu đãi và tính giảm giá phía server |
+| Promotions | Kho ưu đãi công khai, Ví voucher khách hàng, reservation/redeem/release ưu đãi và tính giảm giá phía server |
 | Shared | Enum, money formatter, support dùng thật sự ở nhiều module |
 
 ## Quy tắc phụ thuộc
@@ -61,6 +61,6 @@ app/Modules/
 
 ## Routes và view
 
-- Giữ khai báo route tại `routes/web.php`, đặt tên theo module: `catalog.*`, `cart.*`, `checkout.*`, `appointments.*`.
+- Giữ khai báo route tại `routes/web.php`, đặt tên theo module: `catalog.*`, `cart.*`, `checkout.*`, `account.orders.*`, `appointments.*`.
 - View: `resources/views/catalog/`, `resources/views/cart/`, `resources/views/orders/`, `resources/views/appointments/`.
 - URL catalog dùng slug, ví dụ `/collections/{category:slug}` và `/products/{product:slug}`.

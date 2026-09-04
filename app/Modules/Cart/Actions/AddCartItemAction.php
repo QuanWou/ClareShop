@@ -45,6 +45,7 @@ class AddCartItemAction
                 'product_variant_id' => $variant->getKey(),
             ]);
             $item->quantity = $newQuantity;
+            $item->is_selected = true;
             $item->save();
 
             $this->refreshGuestCartExpiry($cart);

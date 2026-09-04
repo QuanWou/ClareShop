@@ -42,6 +42,7 @@
                         <a href="#account-recent">Đã xem gần đây</a>
                         <a href="#account-profile">Thông tin cá nhân</a>
                         <a href="#account-address">Địa chỉ nhận hàng</a>
+                        <a href="{{ route('account.vouchers.index') }}">Voucher của tôi <span>{{ $voucherCount }}</span></a>
                         <a href="#account-security">Bảo mật</a>
                         <a href="#account-support">Liên hệ Clare</a>
                     </nav>
@@ -81,7 +82,7 @@
                         </div>
                     </section>
 
-                    <section class="account-panel" id="account-orders" aria-labelledby="account-orders-title">
+                    <section class="account-panel account-orders-panel" id="account-orders" aria-labelledby="account-orders-title">
                         <div class="account-panel-heading">
                             <div>
                                 <p class="eyebrow">Đơn hàng</p>
@@ -90,15 +91,9 @@
                             <a href="{{ route('catalog.products.index') }}">Tiếp tục mua sắm</a>
                         </div>
 
-                        <div class="account-record-list">
+                        <div class="account-order-list">
                             @forelse ($orders as $order)
-                                <a class="account-record" href="{{ route('account.orders.show', $order) }}">
-                                    <div>
-                                        <strong>{{ $order->number }}</strong>
-                                        <span>{{ $order->placed_at?->format('d/m/Y') }} · {{ $order->statusLabel() }} · Xem theo dõi</span>
-                                    </div>
-                                    <b>{{ \App\Modules\Shared\Support\Money::formatVnd($order->total) }}</b>
-                                </a>
+                                @include('customers.account.partials.order-card', ['order' => $order])
                             @empty
                                 <p class="account-empty">Bạn chưa có đơn nào. Hãy chọn mẫu đèn yêu thích, thêm vào giỏ và hoàn tất checkout bằng tài khoản này.</p>
                             @endforelse

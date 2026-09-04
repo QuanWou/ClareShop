@@ -168,9 +168,10 @@ Guest cart nhận token qua cookie an toàn; sau đăng nhập, Action phải me
 | `cart_id` | FK → `carts`, cascade delete |
 | `product_variant_id` | FK → `product_variants`, `RESTRICT` khi hard delete |
 | `quantity` | unsigned integer |
+| `is_selected` | boolean, default true, indexed | Dòng được đưa vào báo giá và đơn hàng tiếp theo |
 | timestamps | audit cơ bản |
 
-Ràng buộc unique: `cart_id + product_variant_id`. Cart không lưu giá snapshot; giá/tồn được đọc lại và kiểm tra khi checkout.
+Ràng buộc unique: `cart_id + product_variant_id`. Cart không lưu giá snapshot; giá/tồn được đọc lại và kiểm tra khi checkout. Khi tạo đơn, chỉ dòng `is_selected = true` bị chuyển sang đơn và xóa khỏi giỏ; dòng chưa chọn được giữ lại.
 
 ## Nhóm Order và Payment — đã tạo ở Phase Checkout
 
@@ -182,8 +183,8 @@ Ràng buộc unique: `cart_id + product_variant_id`. Cart không lưu giá snaps
 | `number` | varchar(32), unique | Mã khách nhìn thấy, ví dụ `CLR-...` |
 | `user_id` | nullable FK → `users`, `SET NULL`, indexed | Mọi đơn mới phải có user; nullable chỉ giữ được các dữ liệu lịch sử từ trước khi áp dụng checkout đăng nhập |
 | `status` | varchar(30), indexed | `pending`, `confirmed`, `processing`, `shipped`, `completed`, `cancelled` |
-| `payment_method` | varchar(30), nullable | `cod`, `bank_transfer`, `momo`, `bank_card` hoặc `pay_later`; chỉ set sau khi khách chốt phương thức |
-| `payment_status` | varchar(30), indexed | `unpaid`, `pending`, `paid`, `refunded` |
+| `payment_method` | varchar(30), nullable | `cod`, `bank_transfer`, `momo`, `paypal` hoặc `pay_later`; chỉ set sau khi khách chốt phương thức |
+| `payment_status` | varchar(30), indexed | `unpaid`, `pending`, `paid`, `refunded`, `expired` |
 | `currency` | char(3) | Đơn vị tiền do cấu hình bán hàng quyết định |
 | `customer_name`, `customer_email`, `customer_phone` | varchar | Snapshot liên hệ đặt hàng |
 | shipping fields | `shipping_recipient_name`, `shipping_phone`, `shipping_address_line_1`, `shipping_address_line_2`, `shipping_ward`, `shipping_district`, `shipping_city`, `shipping_postal_code`, `shipping_country_code` | Snapshot giao hàng, không phụ thuộc địa chỉ account |
@@ -196,9 +197,11 @@ Ràng buộc unique: `cart_id + product_variant_id`. Cart không lưu giá snaps
 
 `total = subtotal + shipping_fee - discount_total`; không nhận các tổng tiền này từ client một cách tin cậy.
 
-### `promotion_codes` và `order_discounts`
+### `promotion_codes`, `user_vouchers`, `voucher_reservations` và `order_discounts`
 
-`promotion_codes` lưu code, tên, kiểu `percentage`/`fixed`, giá trị, đơn tối thiểu, mức giảm tối đa, giới hạn/lượt đã dùng, thời gian hiệu lực và trạng thái bật/tắt. `order_discounts` giữ snapshot một ưu đãi đã áp dụng cho một order, gồm code, tên, kiểu, giá trị và số tiền giảm; một order tối đa có một record. Lượt dùng được khóa và tính lại trong transaction tạo/hủy đơn, nên không tin dữ liệu tổng hoặc mã từ client.
+`promotion_codes` lưu code, tên/mô tả/banner, kiểu `percentage`/`fixed`, giá trị, đơn tối thiểu/tối đa, mức giảm tối đa, giới hạn/lượt đã dùng, giới hạn nhận/lượt cá nhân, thời gian hiệu lực, phạm vi áp dụng và trạng thái bật/công khai/cần nhận trước. `user_vouchers` là Ví voucher của khách, unique theo `user_id + promotion_code_id`, có số lượt đã dùng và thời điểm nhận. `voucher_reservations` nối ưu đãi, khách, voucher (nếu có) và order; ghi `reserved`, `redeemed` hoặc `released`, giá trị giảm snapshot và thời điểm hết hạn. Mỗi order có tối đa một reservation.
+
+`order_discounts` giữ snapshot một ưu đãi đã áp dụng cho một order, gồm code, tên, kiểu, giá trị, số tiền giảm và tham chiếu ví voucher khi có; một order tối đa có một record. Reservation được tạo trong transaction order; lượt dùng chỉ tăng khi payment thành `paid`, và được trả lại đúng một lần nếu payment/order bị hủy hoặc hết hạn.
 
 ### `order_items`
 

@@ -30,8 +30,12 @@ class AuthenticationController extends Controller
 
         $request->session()->regenerate();
 
+        if ($request->session()->has('promotions.pending_claim_id')) {
+            return redirect()->route('promotions.claim.resume');
+        }
+
         return redirect()
-            ->intended(route('account.show'))
+            ->intended(route('catalog.home'))
             ->with('success', 'Chào mừng bạn trở lại Clare.');
     }
 
@@ -46,6 +50,10 @@ class AuthenticationController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        if ($request->session()->has('promotions.pending_claim_id')) {
+            return redirect()->route('promotions.claim.resume');
+        }
 
         return redirect()
             ->intended(route('account.show'))

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Catalog\Models\ProductVariant;
 use App\Modules\Orders\Actions\TransitionOrderStatusAction;
+use App\Modules\Orders\Gateways\PayOsClient;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Promotions\Models\PromotionCode;
 use Carbon\Carbon;
@@ -85,8 +86,9 @@ class CheckoutApiTest extends TestCase
         }
     }
 
-    public function test_bank_transfer_checkout_creates_snapshots_reduces_stock_and_returns_vietqr(): void
+    public function test_bank_transfer_checkout_creates_snapshots_reduces_stock_and_returns_payos_qr(): void
     {
+        $this->fakePayOsGateway();
         $customer = $this->customer();
         $variant = ProductVariant::query()->where('sku', 'CLR-RD-BURGUNDY')->firstOrFail();
         $cart = $this->createGuestCartWithItem($variant, 2);
@@ -108,20 +110,18 @@ class CheckoutApiTest extends TestCase
             ->assertJsonPath('data.order.status', 'pending')
             ->assertJsonPath('data.order.payment_method', 'bank_transfer')
             ->assertJsonPath('data.order.payment_status', 'pending')
-            ->assertJsonPath('data.payment.provider', 'vietqr')
+            ->assertJsonPath('data.payment.provider', 'payos')
             ->assertJsonPath('data.payment.status', 'pending')
-            ->assertJsonPath('data.payment.vietqr.bank_id', '970407')
-            ->assertJsonPath('data.payment.vietqr.account_number', '2005111818')
-            ->assertJsonPath('data.payment.vietqr.amount', $response->json('data.order.total'))
+            ->assertJsonPath('data.payment.payos.bank_id', '970422')
+            ->assertJsonPath('data.payment.payos.account_number', '113366668888')
+            ->assertJsonPath('data.payment.payos.amount', $response->json('data.order.total'))
+            ->assertJsonPath('data.payment.payos.qr_code', 'PAYOS-QR-CONTENT')
             ->assertJsonPath('data.shipping.fee_is_estimated', true);
 
         $order = Order::query()->firstOrFail();
-        $qrCodeUrl = $response->json('data.payment.vietqr.qr_code_url');
 
         $this->assertSame($customer->getKey(), $order->user_id);
         $this->assertSame($customer->email, $order->customer_email);
-        $this->assertStringContainsString('amount='.(int) $order->total, $qrCodeUrl);
-        $this->assertStringContainsString('addInfo='.rawurlencode($order->number), $qrCodeUrl);
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->getKey(),
             'product_variant_id' => $variant->getKey(),
@@ -133,8 +133,7 @@ class CheckoutApiTest extends TestCase
         ]);
         $this->assertDatabaseHas('payments', [
             'order_id' => $order->getKey(),
-            'provider' => 'vietqr',
-            'provider_reference' => $order->number,
+            'provider' => 'payos',
             'status' => 'pending',
         ]);
         $this->assertDatabaseHas('payment_status_histories', [
@@ -172,7 +171,7 @@ class CheckoutApiTest extends TestCase
             ->assertJsonPath('data.order.payment_status', 'unpaid')
             ->assertJsonPath('data.payment.provider', 'cod')
             ->assertJsonPath('data.payment.status', 'unpaid')
-            ->assertJsonPath('data.payment.vietqr', null);
+            ->assertJsonPath('data.payment.payos', null);
     }
 
     public function test_checkout_returns_and_snapshots_the_customer_selected_shipping_option(): void
@@ -214,11 +213,10 @@ class CheckoutApiTest extends TestCase
         ]);
     }
 
-    public function test_checkout_creates_pending_payment_records_for_momo_card_and_pay_later(): void
+    public function test_checkout_creates_pending_payment_records_for_momo_and_pay_later(): void
     {
         $methods = [
             'momo' => 'momo',
-            'bank_card' => 'bank_card_gateway',
             'pay_later' => 'pay_later_review',
         ];
 
@@ -245,11 +243,11 @@ class CheckoutApiTest extends TestCase
                 ->assertJsonPath('data.payment.provider', $provider)
                 ->assertJsonPath('data.payment.status', 'pending')
                 ->assertJsonPath('data.payment.integration_status', 'pending_gateway_integration')
-                ->assertJsonPath('data.payment.vietqr', null);
+                ->assertJsonPath('data.payment.payos', null);
         }
 
-        $this->assertDatabaseCount('orders', 3);
-        $this->assertDatabaseCount('payments', 3);
+        $this->assertDatabaseCount('orders', 2);
+        $this->assertDatabaseCount('payments', 2);
     }
 
     public function test_checkout_calculates_and_snapshots_an_eligible_promotion_code_on_the_server(): void
@@ -304,7 +302,12 @@ class CheckoutApiTest extends TestCase
             'code' => 'WELCOME10',
             'discount_amount' => 169000,
         ]);
-        $this->assertSame(1, $promotion->fresh()->usage_count);
+        $this->assertSame(0, $promotion->fresh()->usage_count);
+        $this->assertDatabaseHas('voucher_reservations', [
+            'order_id' => $order->getKey(),
+            'promotion_code_id' => $promotion->getKey(),
+            'status' => 'reserved',
+        ]);
         $this->assertNotNull($order->estimated_delivery_at);
     }
 
@@ -482,5 +485,25 @@ class CheckoutApiTest extends TestCase
             'email' => 'an@example.test',
             'phone' => '0901234567',
         ]);
+    }
+
+    private function fakePayOsGateway(): void
+    {
+        config()->set('services.payos.enabled', true);
+        $client = \Mockery::mock(PayOsClient::class);
+        $client->shouldReceive('createPayment')->once()->andReturnUsing(fn (array $data): array => [
+            'bin' => '970422',
+            'accountNumber' => '113366668888',
+            'accountName' => 'CLARE TEST',
+            'amount' => $data['amount'],
+            'description' => $data['description'],
+            'orderCode' => $data['orderCode'],
+            'currency' => 'VND',
+            'paymentLinkId' => 'PAYOS-LINK-TEST',
+            'status' => 'PENDING',
+            'checkoutUrl' => 'https://pay.payos.vn/web/PAYOS-LINK-TEST',
+            'qrCode' => 'PAYOS-QR-CONTENT',
+        ]);
+        $this->app->instance(PayOsClient::class, $client);
     }
 }

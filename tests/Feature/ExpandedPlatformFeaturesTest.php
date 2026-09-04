@@ -130,6 +130,26 @@ class ExpandedPlatformFeaturesTest extends TestCase
         $this->get('/')->assertSee('--wine:#663344', false)->assertSee('CLARE TEST');
     }
 
+    public function test_configured_google_login_redirects_to_the_oauth_provider(): void
+    {
+        SiteSetting::query()->updateOrCreate(['key' => 'google_client_id'], ['value' => 'test-client-id', 'is_secret' => false]);
+        SiteSetting::query()->updateOrCreate(['key' => 'google_client_secret'], ['value' => Crypt::encryptString('test-client-secret'), 'is_secret' => true]);
+        SiteSetting::query()->updateOrCreate(['key' => 'google_redirect_url'], ['value' => 'http://localhost:8000/auth/google/callback', 'is_secret' => false]);
+
+        $this->get(route('social.redirect', 'google'))
+            ->assertRedirectContains('accounts.google.com');
+    }
+
+    public function test_configured_facebook_login_redirects_to_the_oauth_provider(): void
+    {
+        SiteSetting::query()->updateOrCreate(['key' => 'facebook_client_id'], ['value' => 'test-app-id', 'is_secret' => false]);
+        SiteSetting::query()->updateOrCreate(['key' => 'facebook_client_secret'], ['value' => Crypt::encryptString('test-app-secret'), 'is_secret' => true]);
+        SiteSetting::query()->updateOrCreate(['key' => 'facebook_redirect_url'], ['value' => 'http://localhost:8000/auth/facebook/callback', 'is_secret' => false]);
+
+        $this->get(route('social.redirect', 'facebook'))
+            ->assertRedirectContains('facebook.com');
+    }
+
     public function test_wishlist_and_recent_views_are_visible_in_the_customer_account(): void
     {
         $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);

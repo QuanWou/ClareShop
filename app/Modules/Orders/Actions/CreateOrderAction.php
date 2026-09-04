@@ -4,17 +4,15 @@ namespace App\Modules\Orders\Actions;
 
 use App\Models\User;
 use App\Modules\Cart\Models\Cart;
+use App\Modules\Cart\Models\CartItem;
 use App\Modules\Catalog\Models\ProductVariant;
 use App\Modules\Orders\Data\CreatedOrderData;
 use App\Modules\Orders\Data\ShippingAddressData;
-use App\Modules\Orders\Mail\OrderPlacedMail;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderStatusHistory;
-use App\Modules\Orders\Models\PaymentStatusHistory;
 use App\Modules\Orders\Support\PaymentMethodCatalog;
-use App\Modules\Settings\Actions\ConfigureStoreMailAction;
+use App\Modules\Promotions\Actions\ReservePromotionForOrderAction;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -22,9 +20,12 @@ class CreateOrderAction
 {
     public function __construct(
         private readonly CalculateCheckoutTotalsAction $calculateCheckoutTotals,
-        private readonly BuildVietQrPaymentAction $buildVietQrPayment,
         private readonly CalculateEstimatedDeliveryAtAction $calculateEstimatedDeliveryAt,
-        private readonly ConfigureStoreMailAction $configureMail,
+        private readonly InitializePayPalPaymentAction $initializePayPalPayment,
+        private readonly InitializeMomoPaymentAction $initializeMomoPayment,
+        private readonly InitializePayOsPaymentAction $initializePayOsPayment,
+        private readonly CreatePaymentAttemptAction $createPaymentAttempt,
+        private readonly ReservePromotionForOrderAction $reservePromotion,
     ) {}
 
     public function execute(Cart $cart, User $customer, array $validated): CreatedOrderData
@@ -46,9 +47,9 @@ class CreateOrderAction
                 discountCode: $validated['discount_code'] ?? null,
                 shippingOption: $validated['shipping_option'],
                 lockForUpdate: true,
+                customer: $customer,
             );
             $paymentMethod = PaymentMethodCatalog::get($validated['payment_method']);
-            $requiresVietQr = (bool) $paymentMethod['requires_vietqr'];
             $placedAt = now();
             $estimatedDeliveryAt = $this->calculateEstimatedDeliveryAt->execute($placedAt, $totals->shipping->estimatedDays);
 
@@ -59,9 +60,9 @@ class CreateOrderAction
                 'payment_method' => $validated['payment_method'],
                 'payment_status' => $paymentMethod['initial_status'],
                 'currency' => config('commerce.currency'),
-                'customer_name' => $validated['customer_name'],
+                'customer_name' => $address->recipientName,
                 'customer_email' => $customer->email,
-                'customer_phone' => $validated['customer_phone'],
+                'customer_phone' => $address->phone,
                 'shipping_recipient_name' => $address->recipientName,
                 'shipping_phone' => $address->phone,
                 'shipping_address_line_1' => $address->addressLine1,
@@ -89,7 +90,7 @@ class CreateOrderAction
 
             if ($totals->discount->isApplied()) {
                 $order->discount()->create($totals->discount->toOrderDiscountAttributes());
-                $totals->discount->promotion->increment('usage_count');
+                $this->reservePromotion->execute($order, $customer, $totals->discount);
             }
 
             foreach ($totals->lines as $line) {
@@ -122,38 +123,46 @@ class CreateOrderAction
                 'note' => 'Đơn hàng được tạo từ checkout.',
             ]);
 
-            $vietQr = $requiresVietQr ? $this->buildVietQrPayment->execute($order) : null;
-            $payment = $order->payments()->create([
-                'provider' => $paymentMethod['provider'],
-                'provider_reference' => $requiresVietQr ? $order->number : null,
-                'amount' => $order->total,
-                'currency' => $order->currency,
-                'status' => $order->payment_status,
-                'payload' => $vietQr?->toArray() ?? $this->paymentPayload($validated['payment_method'], $paymentMethod),
-            ]);
+            $payment = $this->createPaymentAttempt->execute(
+                order: $order,
+                paymentMethodCode: $validated['payment_method'],
+                actorId: $userId,
+                historyNote: 'Thanh toán được khởi tạo từ checkout.',
+            );
 
-            PaymentStatusHistory::query()->create([
-                'payment_id' => $payment->getKey(),
-                'from_status' => null,
-                'to_status' => $payment->status,
-                'changed_by' => $userId,
-                'note' => 'Thanh toán được khởi tạo từ checkout.',
-            ]);
-
-            $lockedCart->items()->delete();
+            CartItem::query()
+                ->where('cart_id', $lockedCart->getKey())
+                ->where('is_selected', true)
+                ->delete();
 
             return new CreatedOrderData(
                 order: $order,
                 payment: $payment,
-                vietQr: $vietQr,
             );
         });
 
-        try {
-            $this->configureMail->execute();
-            Mail::to($customer->email)->send(new OrderPlacedMail($result->order->load('items')));
-        } catch (\Throwable $exception) {
-            report($exception);
+        $shouldInitializeExternalPayment = $result->payment->provider === 'paypal'
+            || ($result->payment->provider === 'momo' && (bool) config('services.momo.enabled') && ! app()->runningUnitTests())
+            || ($result->payment->provider === 'payos' && (bool) config('services.payos.enabled'));
+
+        if ($shouldInitializeExternalPayment) {
+            try {
+                $result = new CreatedOrderData(
+                    order: $result->order->fresh(),
+                    payment: match ($result->payment->provider) {
+                        'paypal' => $this->initializePayPalPayment->execute($result->payment),
+                        'momo' => $this->initializeMomoPayment->execute($result->payment),
+                        'payos' => $this->initializePayOsPayment->execute($result->payment),
+                    },
+                );
+            } catch (\Throwable $exception) {
+                report($exception);
+
+                $result = new CreatedOrderData(
+                    order: $result->order->fresh(),
+                    payment: $result->payment->fresh(),
+                );
+            }
         }
 
         return $result;
@@ -168,19 +177,5 @@ class CreateOrderAction
         } while (Order::query()->where('number', $number)->exists());
 
         return $number;
-    }
-
-    /** @param array<string, mixed> $paymentMethod */
-    private function paymentPayload(string $paymentMethodCode, array $paymentMethod): ?array
-    {
-        if (! $paymentMethod['is_simulated']) {
-            return null;
-        }
-
-        return [
-            'payment_method' => $paymentMethodCode,
-            'integration_status' => 'pending_gateway_integration',
-            'message' => $paymentMethod['confirmation_description'],
-        ];
     }
 }

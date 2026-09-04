@@ -35,7 +35,10 @@ class MergeGuestCartAction
                     'cart_id' => $userCart->getKey(),
                     'product_variant_id' => $variant->getKey(),
                 ],
-                ['quantity' => $quantity],
+                [
+                    'quantity' => $quantity,
+                    'is_selected' => (bool) ($userItem?->is_selected || $guestItem->is_selected),
+                ],
             );
         }
 

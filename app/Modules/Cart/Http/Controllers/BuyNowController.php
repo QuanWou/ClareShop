@@ -4,13 +4,18 @@ namespace App\Modules\Cart\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Cart\Actions\AddItemToCartAction;
+use App\Modules\Cart\Actions\SelectCartItemsForCheckoutAction;
 use App\Modules\Cart\Http\Requests\AddCartItemRequest;
 use App\Modules\Cart\Support\CartCookie;
 use Illuminate\Http\RedirectResponse;
 
 class BuyNowController extends Controller
 {
-    public function __invoke(AddCartItemRequest $request, AddItemToCartAction $action): RedirectResponse
+    public function __invoke(
+        AddCartItemRequest $request,
+        AddItemToCartAction $action,
+        SelectCartItemsForCheckoutAction $selectItems,
+    ): RedirectResponse
     {
         $validated = $request->validated();
         $identifier = $request->user()?->getAuthIdentifier();
@@ -20,6 +25,10 @@ class BuyNowController extends Controller
             variantId: (int) $validated['product_variant_id'],
             quantity: (int) $validated['quantity'],
         );
+        $cartItemId = (int) $result->cart->items()
+            ->where('product_variant_id', (int) $validated['product_variant_id'])
+            ->value('id');
+        $selectItems->execute($result->cart, [$cartItemId]);
         $response = redirect()->route('checkout.show');
 
         if ($result->guestToken !== null) {

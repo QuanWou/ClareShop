@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Admin\Actions\ListAdminPromotionCodesAction;
 use App\Modules\Admin\Http\Requests\StoreAdminPromotionCodeRequest;
 use App\Modules\Admin\Http\Requests\UpdateAdminPromotionCodeRequest;
+use App\Modules\Promotions\Actions\ArchivePromotionCodeAction;
 use App\Modules\Promotions\Actions\CreatePromotionCodeAction;
 use App\Modules\Promotions\Actions\UpdatePromotionCodeAction;
 use App\Modules\Promotions\Models\PromotionCode;
@@ -24,7 +25,7 @@ class AdminPromotionCodeController extends Controller
     public function create(): View
     {
         return view('admin.promotions.form', [
-            'promotion' => new PromotionCode(),
+            'promotion' => new PromotionCode,
         ]);
     }
 
@@ -52,5 +53,14 @@ class AdminPromotionCodeController extends Controller
         return redirect()
             ->route('admin.promotions.edit', $promotion)
             ->with('success', 'Mã ưu đãi đã được cập nhật.');
+    }
+
+    public function destroy(PromotionCode $promotion, ArchivePromotionCodeAction $archivePromotionCode): RedirectResponse
+    {
+        $archivePromotionCode->execute($promotion);
+
+        return redirect()
+            ->route('admin.promotions.index')
+            ->with('success', 'Mã ưu đãi đã được tắt và vẫn được giữ lại cho lịch sử đơn hàng.');
     }
 }

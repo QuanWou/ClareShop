@@ -14,9 +14,11 @@ class ListAdminCatalogProductsAction
                 ($filters['status'] ?? null) === 'archived',
                 fn ($query) => $query->onlyTrashed(),
             )
-            ->with('category')
-            ->withCount(['variants', 'images'])
+            ->with(['category', 'images'])
+            ->withCount(['variants', 'activeVariants', 'images'])
+            ->withSum('variants as total_stock', 'stock_quantity')
             ->withMin('variants as minimum_price', 'price')
+            ->withMax('variants as maximum_price', 'price')
             ->when($filters['category_id'] ?? null, fn ($query, $categoryId) => $query->where('category_id', $categoryId))
             ->when(($filters['status'] ?? null) === 'active', fn ($query) => $query->where('is_active', true))
             ->when(($filters['status'] ?? null) === 'inactive', fn ($query) => $query->where('is_active', false))

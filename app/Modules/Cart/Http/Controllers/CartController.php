@@ -4,14 +4,18 @@ namespace App\Modules\Cart\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Cart\Actions\AddItemToCartAction;
+use App\Modules\Cart\Actions\ClearCartAction;
 use App\Modules\Cart\Actions\RemoveCartItemAction;
 use App\Modules\Cart\Actions\ResolveCartAction;
+use App\Modules\Cart\Actions\SelectCartItemsForCheckoutAction;
 use App\Modules\Cart\Actions\ShowCartAction;
 use App\Modules\Cart\Actions\UpdateCartItemAction;
 use App\Modules\Cart\Data\CartResolution;
 use App\Modules\Cart\Http\Requests\AddCartItemRequest;
+use App\Modules\Cart\Http\Requests\SelectCartItemsRequest;
 use App\Modules\Cart\Http\Requests\UpdateCartItemRequest;
 use App\Modules\Cart\Support\CartCookie;
+use App\Modules\Promotions\Actions\GetCartVoucherPreviewAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,10 +27,35 @@ class CartController extends Controller
         Request $request,
         ResolveCartAction $resolveCart,
         ShowCartAction $showCart,
+        GetCartVoucherPreviewAction $getVoucherPreview,
     ): Response {
         $resolution = $this->resolve($request, $resolveCart, create: false);
+        $summary = $showCart->execute($resolution->cart);
 
-        return response()->view('cart.show', $showCart->execute($resolution->cart));
+        return response()->view('cart.show', [
+            ...$summary,
+            'cartVoucher' => $getVoucherPreview->execute(
+                $request->user(),
+                $request->session()->get('checkout.discount_code'),
+                $summary['selectedSubtotal'],
+            ),
+        ]);
+    }
+
+    public function checkout(
+        SelectCartItemsRequest $request,
+        ResolveCartAction $resolveCart,
+        SelectCartItemsForCheckoutAction $selectItems,
+    ): RedirectResponse {
+        $resolution = $this->resolve($request, $resolveCart, create: false);
+        abort_if($resolution->cart === null, 404);
+
+        $selectItems->execute(
+            $resolution->cart,
+            $request->validated('cart_item_ids'),
+        );
+
+        return redirect()->route('checkout.show');
     }
 
     public function store(
@@ -95,6 +124,24 @@ class CartController extends Controller
         return redirect()
             ->route('cart.show')
             ->with('success', 'Đã bỏ sản phẩm khỏi giỏ hàng.');
+    }
+
+    public function clear(
+        Request $request,
+        ResolveCartAction $resolveCart,
+        ClearCartAction $clearCart,
+    ): RedirectResponse {
+        $resolution = $this->resolve($request, $resolveCart, create: false);
+
+        if ($resolution->cart !== null) {
+            $clearCart->execute($resolution->cart);
+        }
+
+        $request->session()->forget('checkout.discount_code');
+
+        return redirect()
+            ->route('cart.show')
+            ->with('success', 'Giỏ hàng đã được làm trống.');
     }
 
     private function resolve(Request $request, ResolveCartAction $action, bool $create): CartResolution

@@ -49,7 +49,11 @@ class CartTest extends TestCase
             ->get(route('cart.show'))
             ->assertOk()
             ->assertSee('Ru Đêm')
+            ->assertSee('cart-purchase-card', false)
+            ->assertSee('2.490.000 VND / sản phẩm')
             ->assertSee('4.980.000 VND')
+            ->assertSee('Thành tiền dự kiến')
+            ->assertSee('Tiến hành thanh toán')
             ->assertSee('Giỏ hàng, hiện có 2 sản phẩm');
     }
 
@@ -198,6 +202,42 @@ class CartTest extends TestCase
             'product_variant_id' => $variant->getKey(),
             'quantity' => 3,
         ]);
+    }
+
+    public function test_customer_can_select_only_some_cart_items_for_checkout(): void
+    {
+        $customer = User::factory()->create(['is_active' => true]);
+        $selectedVariant = ProductVariant::query()->where('sku', 'CLR-RD-BURGUNDY')->firstOrFail();
+        $savedForLaterVariant = ProductVariant::query()->where('sku', 'CLR-HH-BRONZE')->firstOrFail();
+        $cart = Cart::query()->create([
+            'user_id' => $customer->getKey(),
+            'currency' => 'VND',
+        ]);
+        $selectedItem = $cart->items()->create([
+            'product_variant_id' => $selectedVariant->getKey(),
+            'quantity' => 1,
+            'is_selected' => true,
+        ]);
+        $savedForLaterItem = $cart->items()->create([
+            'product_variant_id' => $savedForLaterVariant->getKey(),
+            'quantity' => 1,
+            'is_selected' => true,
+        ]);
+
+        $this->actingAs($customer)
+            ->post(route('cart.checkout'), [
+                'cart_item_ids' => [$selectedItem->getKey()],
+            ])
+            ->assertRedirect(route('checkout.show'));
+
+        $this->assertTrue($selectedItem->fresh()->is_selected);
+        $this->assertFalse($savedForLaterItem->fresh()->is_selected);
+
+        $this->actingAs($customer)
+            ->get(route('checkout.show'))
+            ->assertOk()
+            ->assertSee($selectedVariant->product->name)
+            ->assertDontSee($savedForLaterVariant->product->name);
     }
 
     public function test_an_expired_guest_cookie_is_replaced_when_an_item_is_added(): void

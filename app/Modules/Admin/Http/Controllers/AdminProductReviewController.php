@@ -4,6 +4,7 @@ namespace App\Modules\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Admin\Http\Requests\UpdateProductReviewStatusRequest;
+use App\Modules\Catalog\Actions\DeleteProductReviewAction;
 use App\Modules\Catalog\Actions\ModerateProductReviewAction;
 use App\Modules\Catalog\Models\ProductReview;
 use Illuminate\Contracts\View\View;
@@ -33,6 +34,13 @@ class AdminProductReviewController extends Controller
     {
         $action->execute($review, $request->validated());
 
-        return back()->with('status', 'Đã cập nhật trạng thái đánh giá.');
+        return back()->with('success', 'Đã cập nhật trạng thái đánh giá.');
+    }
+
+    public function destroy(ProductReview $review, DeleteProductReviewAction $action): RedirectResponse
+    {
+        $action->execute($review);
+
+        return back()->with('success', 'Đánh giá và ảnh đính kèm đã được xóa.');
     }
 }

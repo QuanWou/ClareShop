@@ -30,9 +30,22 @@ class ProductImage extends Model
 
     protected function url(): Attribute
     {
-        return Attribute::get(fn (): string => $this->disk === 'asset'
-            ? asset($this->path)
-            : Storage::disk($this->disk)->url($this->path));
+        return Attribute::get(function (): string {
+            $path = ltrim((string) $this->path, '/');
+            $fallback = '/images/catalog/product-placeholder.svg';
+
+            if ($this->disk === 'asset') {
+                return is_file(public_path($path)) ? '/'.$path : $fallback;
+            }
+
+            if ($this->disk === 'public') {
+                return Storage::disk('public')->exists($path) ? '/storage/'.$path : $fallback;
+            }
+
+            return Storage::disk($this->disk)->exists($path)
+                ? Storage::disk($this->disk)->url($path)
+                : $fallback;
+        });
     }
 
     public function product(): BelongsTo

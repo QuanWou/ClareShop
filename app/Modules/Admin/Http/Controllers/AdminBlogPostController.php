@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Modules\Admin\Actions\ListAdminBlogPostsAction;
 use App\Modules\Blog\Actions\ArchiveBlogPostAction;
 use App\Modules\Blog\Actions\CreateBlogPostAction;
+use App\Modules\Blog\Actions\RestoreBlogPostAction;
 use App\Modules\Blog\Actions\UpdateBlogPostAction;
 use App\Modules\Blog\Http\Requests\SaveBlogPostRequest;
 use App\Modules\Blog\Models\BlogCategory;
@@ -56,6 +57,13 @@ class AdminBlogPostController extends Controller
         $action->execute($post);
 
         return redirect()->route('admin.blog.posts.index')->with('success', 'Đã lưu trữ bài viết.');
+    }
+
+    public function restore(BlogPost $post, RestoreBlogPostAction $action): RedirectResponse
+    {
+        $action->execute($post);
+
+        return redirect()->route('admin.blog.posts.edit', $post)->with('success', 'Đã khôi phục bài viết. Hãy rà soát nội dung trước khi xuất bản lại.');
     }
 
     private function formData(): array

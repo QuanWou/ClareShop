@@ -1,3 +1,4 @@
+@php($user = $user ?? auth()->user())
 <form class="account-form account-address-form" action="{{ $formAction }}" method="POST">
     @csrf
     @if ($formMethod !== 'POST') @method($formMethod) @endif

@@ -15,10 +15,35 @@ class CatalogTaxonomySeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function (): void {
-            $lampRoot = $this->category('den', 'Đèn', null, 1, 'Khám phá đèn theo kiểu dáng, không gian và công năng sử dụng.');
-            $styleRoot = $this->category('kieu-dang-cau-tao', 'Kiểu dáng & cấu tạo', $lampRoot, 10);
-            $spaceRoot = $this->category('khong-gian-su-dung', 'Không gian sử dụng', $lampRoot, 20);
-            $useRoot = $this->category('cong-nang-ung-dung', 'Công năng & ứng dụng', $lampRoot, 30);
+            $lampRoot = $this->category(
+                'den',
+                'Đèn',
+                null,
+                1,
+                'Khám phá đèn theo kiểu dáng, không gian và công năng sử dụng.',
+                'images/catalog/moi1.png',
+            );
+            $styleRoot = $this->category(
+                'kieu-dang-cau-tao',
+                'Kiểu dáng & cấu tạo',
+                $lampRoot,
+                10,
+                imagePath: 'images/catalog/moi3.png',
+            );
+            $spaceRoot = $this->category(
+                'khong-gian-su-dung',
+                'Không gian sử dụng',
+                $lampRoot,
+                20,
+                imagePath: 'images/catalog/den-ban-thao-moc-ngu.png',
+            );
+            $useRoot = $this->category(
+                'cong-nang-ung-dung',
+                'Công năng & ứng dụng',
+                $lampRoot,
+                30,
+                imagePath: 'images/catalog/moi8.png',
+            );
 
             $styleCategories = [
                 ['den-chum', 'Đèn chùm'],
@@ -32,11 +57,11 @@ class CatalogTaxonomySeeder extends Seeder
                 ['den-led-day-den-tuyp', 'Đèn LED dây & Đèn tuýp'],
             ];
             $spaceCategories = [
-                ['den-phong-khach', 'Đèn phòng khách'],
-                ['den-phong-ngu', 'Đèn phòng ngủ'],
-                ['den-phong-bep-phong-an', 'Đèn phòng bếp / Phòng ăn'],
-                ['den-phong-tam', 'Đèn phòng tắm'],
-                ['den-ngoai-troi-san-vuon', 'Đèn ngoài trời / Sân vườn'],
+                ['den-phong-khach', 'Đèn phòng khách', null],
+                ['den-phong-ngu', 'Đèn phòng ngủ', 'images/catalog/den-ban-ru-dem-ngu.png'],
+                ['den-phong-bep-phong-an', 'Đèn phòng bếp / Phòng ăn', null],
+                ['den-phong-tam', 'Đèn phòng tắm', null],
+                ['den-ngoai-troi-san-vuon', 'Đèn ngoài trời / Sân vườn', null],
             ];
             $useCategories = [
                 ['den-trang-tri', 'Đèn trang trí'],
@@ -49,8 +74,8 @@ class CatalogTaxonomySeeder extends Seeder
                 $this->category($slug, $name, $styleRoot, ($index + 1) * 10);
             }
 
-            foreach ($spaceCategories as $index => [$slug, $name]) {
-                $this->category($slug, $name, $spaceRoot, ($index + 1) * 10);
+            foreach ($spaceCategories as $index => [$slug, $name, $imagePath]) {
+                $this->category($slug, $name, $spaceRoot, ($index + 1) * 10, imagePath: $imagePath);
             }
 
             foreach ($useCategories as $index => [$slug, $name]) {
@@ -87,8 +112,14 @@ class CatalogTaxonomySeeder extends Seeder
         });
     }
 
-    private function category(string $slug, string $name, ?Category $parent, int $sortOrder, ?string $description = null): Category
-    {
+    private function category(
+        string $slug,
+        string $name,
+        ?Category $parent,
+        int $sortOrder,
+        ?string $description = null,
+        ?string $imagePath = null,
+    ): Category {
         $category = Category::query()->firstOrNew(['slug' => $slug]);
         $category->fill([
             'parent_id' => $parent?->getKey(),
@@ -99,6 +130,10 @@ class CatalogTaxonomySeeder extends Seeder
 
         if ($description !== null || ! $category->exists) {
             $category->description = $description;
+        }
+
+        if ($imagePath !== null && blank($category->image_path)) {
+            $category->image_path = $imagePath;
         }
 
         $category->save();

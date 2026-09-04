@@ -3,12 +3,14 @@
 namespace App\Modules\Promotions\Data;
 
 use App\Modules\Promotions\Models\PromotionCode;
+use App\Modules\Promotions\Models\UserVoucher;
 use App\Modules\Shared\Support\Money;
 
 readonly class PromotionDiscountData
 {
     public function __construct(
         public ?PromotionCode $promotion,
+        public ?UserVoucher $userVoucher,
         public ?string $code,
         public ?string $name,
         public ?string $type,
@@ -19,7 +21,7 @@ readonly class PromotionDiscountData
 
     public static function none(?string $message = null): self
     {
-        return new self(null, null, null, null, null, 0, $message);
+        return new self(null, null, null, null, null, null, 0, $message);
     }
 
     public function isApplied(): bool
@@ -44,6 +46,7 @@ readonly class PromotionDiscountData
     {
         return [
             'promotion_code_id' => $this->promotion?->getKey(),
+            'user_voucher_id' => $this->userVoucher?->getKey(),
             'code' => $this->code,
             'name' => $this->name,
             'discount_type' => $this->type,

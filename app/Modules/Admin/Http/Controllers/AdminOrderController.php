@@ -9,6 +9,7 @@ use App\Modules\Admin\Http\Requests\ListAdminOrdersRequest;
 use App\Modules\Admin\Http\Requests\RecordAdminPaymentStatusRequest;
 use App\Modules\Admin\Http\Requests\UpdateAdminOrderStatusRequest;
 use App\Modules\Orders\Actions\RecordPaymentStatusAction;
+use App\Modules\Orders\Actions\SendOrderConfirmationAction;
 use App\Modules\Orders\Actions\TransitionOrderStatusAction;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\Payment;
@@ -76,5 +77,22 @@ class AdminOrderController extends Controller
         return redirect()
             ->route('admin.orders.show', $order)
             ->with('success', 'Trạng thái thanh toán đã được ghi nhận.');
+    }
+
+    public function resendConfirmation(
+        Order $order,
+        SendOrderConfirmationAction $sendConfirmation,
+    ): RedirectResponse {
+        if ($sendConfirmation->execute($order, force: true)) {
+            return redirect()
+                ->route('admin.orders.show', $order)
+                ->with('success', "Đã gửi email xác nhận đến {$order->customer_email}.");
+        }
+
+        return redirect()
+            ->route('admin.orders.show', $order)
+            ->withErrors([
+                'email' => 'Không thể gửi email. Hãy cấu hình SMTP thật trong Cài đặt và kiểm tra lại tài khoản/mật khẩu ứng dụng.',
+            ]);
     }
 }

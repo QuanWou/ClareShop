@@ -21,9 +21,11 @@ Tài liệu này ghi lại phần đã được triển khai từ hai bản yêu
 ## Khách hàng, địa chỉ, checkout và đơn hàng
 
 - Tài khoản có nhiều địa chỉ, nhãn địa chỉ và một địa chỉ mặc định; checkout cho phép chọn địa chỉ đã lưu nhưng vẫn lưu snapshot vào đơn.
+- Kho Ưu đãi & Voucher công khai, Ví voucher của khách và picker voucher tại checkout đã dùng chung hệ thống promotion hiện có. Voucher được nhận, giữ, redeem hoặc giải phóng theo các bảng audit riêng; không bị tính là đã dùng chỉ vì khách đã nhận mã.
+- Mã dùng với payment pending không phải COD được giữ 30 phút. Scheduler hủy đơn hết hạn, hoàn tồn và nhả voucher đúng một lần; voucher chỉ tăng lượt dùng sau payment `paid`.
 - Admin khách hàng giữ đầy đủ thông tin liên hệ, trạng thái, tổng đơn, tổng tiền hoàn tất, đơn gần đây và địa chỉ.
-- Email xác nhận tạo đơn và email đổi trạng thái đã có; cấu hình SMTP được đọc từ Settings và lỗi gửi mail không làm hỏng transaction đơn hàng.
-- COD/VietQR và các phương thức chưa có gateway vẫn giữ đúng trạng thái chờ đối soát; không tự đánh dấu đã thanh toán.
+- Email xác nhận đơn chỉ gửi một lần sau khi thanh toán được xác nhận; email đổi trạng thái vẫn hoạt động, cấu hình SMTP được đọc từ Settings và lỗi gửi mail không làm hỏng transaction đơn hàng.
+- payOS đã có Payment Link/QR 3 phút, return/cancel URL, webhook xác minh chữ ký, API kiểm tra trạng thái và xử lý idempotent. PayPal Sandbox đã có Orders/Capture API; MoMo Sandbox đã có adapter ký request, tạo payUrl và IPN xác minh chữ ký. COD và các phương thức chưa có gateway không tự đánh dấu đã thanh toán.
 
 ## Blog, nội dung và SEO
 
@@ -44,14 +46,14 @@ Tài liệu này ghi lại phần đã được triển khai từ hai bản yêu
 - Laravel Socialite đã được tích hợp cho Google và Facebook; liên kết tài khoản theo provider ID hoặc email, đồng thời chặn tài khoản đã khóa/xóa.
 - Nút đăng nhập chỉ hoạt động khi đủ client ID, client secret và callback URL trong Admin Settings.
 
-## Chưa thể coi là tích hợp thật
+## Tích hợp thật ngoài phạm vi bản mô phỏng
 
-Các phần sau đã có điểm cấu hình hoặc luồng chờ, nhưng cần dữ liệu/quyết định thật trước khi bật production:
+Theo quyết định ngày 2026-08-24, các phần sau chỉ cần hoạt động ở mức mô phỏng/cấu hình trong bản demo. Nếu sau này bật production thì mới cần dữ liệu/quyết định thật:
 
 1. OAuth Google/Facebook: client ID, client secret, callback đã đăng ký.
 2. SMTP: máy chủ, cổng, tài khoản, mật khẩu, mã hóa và địa chỉ gửi.
 3. Hãng vận chuyển: API credentials, kho gửi, khu vực/dịch vụ và phụ phí.
-4. Cổng MoMo/thẻ/trả sau: merchant credentials, chữ ký, webhook và quy trình đối soát/hoàn tiền.
+4. Cổng trả sau: merchant credentials, chữ ký, webhook và quy trình đối soát/hoàn tiền. MoMo production và PayPal production vẫn cần live credentials cùng quy trình hoàn tiền chính thức.
 5. Appointment: vùng phục vụ, khung giờ, thời lượng và kênh thông báo chính thức.
 6. Phân quyền nhân viên: cần chốt ma trận quyền nếu tách khỏi role `admin`.
 
@@ -60,6 +62,5 @@ Không được dùng cấu hình giả để trình bày các mục trên như 
 ## Kiểm tra kỹ thuật
 
 - Migration mới từ `2026_08_21_090001` đến `2026_08_21_090009` đều là migration cộng thêm, không sửa migration đã chạy.
-- Bộ kiểm thử ngày 2026-08-21: 78 test, 645 assertion, tất cả đạt.
+- Bộ kiểm thử ngày 2026-08-28: 87 test, 734 assertion, tất cả đạt.
 - Dữ liệu giá và tồn kho tiếp tục chỉ lấy từ `product_variants`.
-

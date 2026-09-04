@@ -3,13 +3,28 @@
 return [
     'order_number_prefix' => 'CLR',
 
+    'voucher' => [
+        'pending_minutes' => (int) env('VOUCHER_RESERVATION_MINUTES', 30),
+    ],
+
     'payment' => [
-        'vietqr' => [
-            'image_base_url' => env('VIETQR_IMAGE_BASE_URL', 'https://img.vietqr.io/image'),
-            'bank_id' => env('VIETQR_BANK_ID', '970407'),
-            'account_number' => env('VIETQR_BANK_ACCOUNT', '2005111818'),
-            'account_name' => env('VIETQR_ACCOUNT_NAME', 'DO TRUNG QUAN'),
-            'template' => env('VIETQR_TEMPLATE', '4ueHdQu'),
+        // Short-lived payment sessions protect QR codes from being reused.
+        'qr_timeout_seconds' => (int) env('CHECKOUT_QR_TIMEOUT_SECONDS', 180),
+        'paypal' => [
+            'mode' => env('PAYPAL_MODE', 'sandbox'),
+            'client_id' => env('PAYPAL_CLIENT_ID'),
+            'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+            'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+            'currency' => env('PAYPAL_CURRENCY', 'USD'),
+            'vnd_per_unit' => (int) env('PAYPAL_VND_PER_USD', 25000),
+            'pending_minutes' => (int) env('PAYPAL_PENDING_MINUTES', 30),
+            'timeout_seconds' => (int) env('PAYPAL_TIMEOUT_SECONDS', 20),
+        ],
+        'momo' => [
+            'enabled' => filter_var(env('MOMO_ENABLED', false), FILTER_VALIDATE_BOOL)
+                && filled(env('MOMO_PARTNER_CODE'))
+                && filled(env('MOMO_ACCESS_KEY'))
+                && filled(env('MOMO_SECRET_KEY')),
         ],
     ],
 
@@ -20,43 +35,48 @@ return [
             'description' => 'Thanh toán trực tiếp khi đơn được giao đến bạn.',
             'provider' => 'cod',
             'initial_status' => 'unpaid',
-            'requires_vietqr' => false,
+            'requires_qr' => false,
             'is_simulated' => false,
             'confirmation_title' => 'Thanh toán khi đơn được giao.',
             'confirmation_description' => 'Vui lòng chuẩn bị đúng tổng tiền khi nhận hàng.',
         ],
         'bank_transfer' => [
-            'label' => 'Chuyển khoản qua VietQR',
-            'short_label' => 'VietQR',
-            'description' => 'Quét mã QR đúng số tiền và nội dung chuyển khoản sau khi đặt đơn.',
-            'provider' => 'vietqr',
+            'label' => 'QR ngân hàng qua payOS',
+            'short_label' => 'payOS',
+            'description' => 'Quét mã QR ngân hàng được payOS tạo riêng cho đơn hàng và tự động đối soát.',
+            'provider' => 'payos',
             'initial_status' => 'pending',
-            'requires_vietqr' => true,
-            'is_simulated' => false,
-            'confirmation_title' => 'Quét mã để thanh toán.',
-            'confirmation_description' => 'Đơn sẽ chờ đối soát trước khi được xác nhận thanh toán.',
+            'requires_qr' => true,
+            'is_simulated' => ! (filled(env('PAYOS_CLIENT_ID'))
+                && filled(env('PAYOS_API_KEY'))
+                && filled(env('PAYOS_CHECKSUM_KEY'))),
+            'confirmation_title' => 'Quét mã payOS để thanh toán.',
+            'confirmation_description' => 'Đơn được xác nhận tự động sau khi payOS gửi webhook hợp lệ.',
         ],
         'momo' => [
             'label' => 'Ví MoMo',
             'short_label' => 'MoMo',
-            'description' => 'Thanh toán bằng ví MoMo sau khi cổng thanh toán được kết nối.',
+            'description' => 'Thanh toán an toàn qua cổng MoMo. Bạn sẽ được chuyển đến MoMo để xác nhận giao dịch.',
             'provider' => 'momo',
             'initial_status' => 'pending',
-            'requires_vietqr' => false,
-            'is_simulated' => true,
-            'confirmation_title' => 'Đang chờ khởi tạo thanh toán MoMo.',
-            'confirmation_description' => 'Clare đã ghi nhận lựa chọn của bạn. Liên kết thanh toán MoMo sẽ chỉ được tạo khi cổng thanh toán được kết nối.',
+            'requires_qr' => false,
+            'is_simulated' => ! (filter_var(env('MOMO_ENABLED', false), FILTER_VALIDATE_BOOL)
+                && filled(env('MOMO_PARTNER_CODE'))
+                && filled(env('MOMO_ACCESS_KEY'))
+                && filled(env('MOMO_SECRET_KEY'))),
+            'confirmation_title' => 'Hoàn tất thanh toán bằng MoMo.',
+            'confirmation_description' => 'Bạn sẽ được chuyển sang MoMo để xác nhận giao dịch. Đơn chỉ được xác nhận sau khi Clare nhận webhook có chữ ký hợp lệ.',
         ],
-        'bank_card' => [
-            'label' => 'Thẻ ngân hàng',
-            'short_label' => 'Thẻ',
-            'description' => 'Thanh toán bằng thẻ ATM nội địa hoặc thẻ quốc tế qua cổng bảo mật.',
-            'provider' => 'bank_card_gateway',
+        'paypal' => [
+            'label' => 'PayPal',
+            'short_label' => 'PayPal',
+            'description' => 'Thanh toán an toàn qua PayPal. Số tiền VND được quy đổi sang USD theo tỷ giá hiển thị trước khi chuyển hướng.',
+            'provider' => 'paypal',
             'initial_status' => 'pending',
-            'requires_vietqr' => false,
-            'is_simulated' => true,
-            'confirmation_title' => 'Đang chờ khởi tạo thanh toán thẻ.',
-            'confirmation_description' => 'Clare không lưu số thẻ. Cổng thanh toán bảo mật sẽ được mở khi kết nối gateway hoàn tất.',
+            'requires_qr' => false,
+            'is_simulated' => false,
+            'confirmation_title' => 'Hoàn tất thanh toán bằng PayPal.',
+            'confirmation_description' => 'Bạn sẽ được chuyển sang PayPal để duyệt giao dịch và quay lại Clare sau khi thanh toán.',
         ],
         'pay_later' => [
             'label' => 'Mua trước, trả sau',
@@ -64,7 +84,7 @@ return [
             'description' => 'Lựa chọn trả sau được ghi nhận và chờ đối tác tín dụng xét duyệt.',
             'provider' => 'pay_later_review',
             'initial_status' => 'pending',
-            'requires_vietqr' => false,
+            'requires_qr' => false,
             'is_simulated' => true,
             'confirmation_title' => 'Yêu cầu trả sau đang chờ xét duyệt.',
             'confirmation_description' => 'Clare đã ghi nhận lựa chọn của bạn. Hệ thống chưa tự duyệt hạn mức hoặc tạo khoản vay.',

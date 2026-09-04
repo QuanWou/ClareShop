@@ -27,7 +27,16 @@ class CheckoutController extends Controller
             address: ShippingAddressData::fromValidated($request->validated()),
             discountCode: $request->validated('discount_code'),
             shippingOption: $request->validated('shipping_option'),
+            customer: $this->customer($request),
         );
+
+        // Keep a valid selection when the customer returns to checkout or
+        // changes the carrier. Invalid/empty codes are removed immediately.
+        if ($quote->discount->isApplied()) {
+            $request->session()->put('checkout.discount_code', $quote->discount->code);
+        } else {
+            $request->session()->forget('checkout.discount_code');
+        }
 
         return response()->json(['data' => $quote->toArray()]);
     }

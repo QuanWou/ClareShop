@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Admin\Actions\ListAdminMediaAssetsAction;
 use App\Modules\Media\Actions\DeleteMediaAssetAction;
+use App\Modules\Media\Actions\UpdateMediaAssetAction;
 use App\Modules\Media\Actions\UploadMediaAssetsAction;
 use App\Modules\Media\Http\Requests\StoreMediaAssetRequest;
+use App\Modules\Media\Http\Requests\UpdateMediaAssetRequest;
 use App\Modules\Media\Models\MediaAsset;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -33,5 +35,12 @@ class AdminMediaController extends Controller
         $action->execute($asset);
 
         return back()->with('success', 'Đã xóa tệp khỏi thư viện.');
+    }
+
+    public function update(MediaAsset $asset, UpdateMediaAssetRequest $request, UpdateMediaAssetAction $action): RedirectResponse
+    {
+        $action->execute($asset, $request->validated());
+
+        return back()->with('success', 'Đã cập nhật mô tả ảnh.');
     }
 }

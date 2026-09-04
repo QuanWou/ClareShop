@@ -9,7 +9,7 @@ class ListAdminBlogPostsAction
     public function execute(): array
     {
         return [
-            'posts' => BlogPost::query()->with(['category', 'author'])->latest()->paginate(20),
+            'posts' => BlogPost::query()->withTrashed()->with(['category', 'author'])->latest()->paginate(20),
         ];
     }
 }

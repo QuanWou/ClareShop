@@ -140,7 +140,7 @@ class AuthenticationTest extends TestCase
             'email' => '  AN@EXAMPLE.TEST ',
             'password' => 'password123',
         ])
-            ->assertRedirect(route('account.show'))
+            ->assertRedirect(route('catalog.home'))
             ->assertSessionHasNoErrors();
 
         $this->assertAuthenticatedAs($user);
@@ -190,7 +190,7 @@ class AuthenticationTest extends TestCase
         $this->post(route('login.store'), [
             'email' => 'an@example.test',
             'password' => 'password123',
-        ])->assertRedirect(route('account.show'));
+        ])->assertRedirect(route('catalog.home'));
 
         $this->withCookie(config('commerce.cart.cookie'), $guestCart->guest_token)
             ->get(route('account.show'))

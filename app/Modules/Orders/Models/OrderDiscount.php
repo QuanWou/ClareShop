@@ -3,6 +3,7 @@
 namespace App\Modules\Orders\Models;
 
 use App\Modules\Promotions\Models\PromotionCode;
+use App\Modules\Promotions\Models\UserVoucher;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,6 +13,7 @@ class OrderDiscount extends Model
 
     protected $fillable = [
         'promotion_code_id',
+        'user_voucher_id',
         'code',
         'name',
         'discount_type',
@@ -36,5 +38,10 @@ class OrderDiscount extends Model
     public function promotionCode(): BelongsTo
     {
         return $this->belongsTo(PromotionCode::class);
+    }
+
+    public function userVoucher(): BelongsTo
+    {
+        return $this->belongsTo(UserVoucher::class);
     }
 }

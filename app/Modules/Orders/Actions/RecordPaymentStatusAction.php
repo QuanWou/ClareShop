@@ -5,15 +5,26 @@ namespace App\Modules\Orders\Actions;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\Payment;
 use App\Modules\Orders\Models\PaymentStatusHistory;
+use App\Modules\Promotions\Actions\RedeemOrderVoucherAction;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class RecordPaymentStatusAction
 {
-    public function execute(Order $order, Payment $payment, int $actorId, string $nextStatus, string $note): Payment
-    {
-        return DB::transaction(function () use ($order, $payment, $actorId, $nextStatus, $note): Payment {
+    public function __construct(
+        private readonly SendOrderConfirmationAction $sendConfirmation,
+        private readonly RedeemOrderVoucherAction $redeemVoucher,
+    ) {}
+
+    public function execute(
+        Order $order,
+        Payment $payment,
+        int $actorId,
+        string $nextStatus,
+        string $note,
+    ): Payment {
+        $updatedPayment = DB::transaction(function () use ($order, $payment, $actorId, $nextStatus, $note): Payment {
             $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->getKey());
             $lockedPayment = Payment::query()->lockForUpdate()->findOrFail($payment->getKey());
             $currentStatus = $lockedPayment->status;
@@ -31,6 +42,10 @@ class RecordPaymentStatusAction
 
             $lockedOrder->update(['payment_status' => $nextStatus]);
 
+            if ($nextStatus === 'paid') {
+                $this->redeemVoucher->execute($lockedOrder);
+            }
+
             PaymentStatusHistory::query()->create([
                 'payment_id' => $lockedPayment->getKey(),
                 'from_status' => $currentStatus,
@@ -41,10 +56,20 @@ class RecordPaymentStatusAction
 
             return $lockedPayment->fresh('statusHistories.changedBy');
         });
+
+        if ($nextStatus === 'paid') {
+            $this->sendConfirmation->execute($order);
+        }
+
+        return $updatedPayment;
     }
 
     public function allowedNextStatuses(Order $order, Payment $payment): array
     {
+        if ($payment->provider === 'paypal' || ($payment->provider === 'payos' && $payment->status !== 'paid')) {
+            return [];
+        }
+
         if ($payment->status === 'paid') {
             return ['refunded'];
         }

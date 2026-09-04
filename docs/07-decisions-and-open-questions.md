@@ -11,16 +11,22 @@
 | Biến thể | Màu có SKU, giá và tồn kho riêng |
 | Checkout | Khách vãng lai được giữ giỏ; chỉ tài khoản đang hoạt động được báo giá, tạo đơn và xem xác nhận đơn của chính mình |
 | Tiền tệ | Chỉ dùng VND trong V1; hiển thị theo dạng `100.000 VND` |
-| Thanh toán V1 | COD, VietQR động, MoMo, thẻ ngân hàng hoặc trả sau; VietQR sinh QR đúng tổng/mã đơn, các luồng chưa có gateway chỉ ở trạng thái chờ và không tự xác nhận thanh toán |
+| Thanh toán V1 | COD, payOS, MoMo, PayPal hoặc trả sau; payOS tạo Payment Link/QR 3 phút và xác nhận bằng API/webhook có chữ ký; PayPal Sandbox dùng Orders/Capture API và webhook có xác minh chữ ký |
 | Vận chuyển V1 | Checkout lưu địa chỉ snapshot, tổng trọng lượng và quote khách chọn giữa GHN, GHTK, J&T Express; dùng ước tính động có thể thay bằng adapter hãng khi có cấu hình kết nối |
 | Hóa đơn VAT | Không thu thập thông tin xuất hóa đơn/VAT ở V1 |
 | Dịch vụ | Form tư vấn hoặc lắp đặt, nhân viên xác nhận thủ công |
 | Quyền admin V1 | Chỉ tài khoản `admin` đang hoạt động được vào back office; không tự cấp quyền cho tài khoản có sẵn |
 | Hủy đơn | Chỉ hủy từ `pending`, `confirmed` hoặc `processing`; đơn đã ghi nhận thanh toán phải hoàn tiền thủ công trước khi hủy và hoàn tồn kho |
-| Khuyến mãi V1 | Một mã trên mỗi đơn; giảm tiền hàng, không giảm phí ship; kiểm tra và ghi snapshot trong transaction tạo đơn |
+| Khuyến mãi V1 | Một mã trên mỗi đơn; giảm tiền hàng, không giảm phí ship; mã có thể được nhận vào Ví voucher. Khi tạo đơn, voucher được giữ trong transaction; chỉ dùng chính thức khi payment `paid`, pending không phải COD hết hạn sau 30 phút và tự nhả voucher/hoàn tồn |
 | ETA đơn hàng | Mô phỏng từ quote nội bộ, hiển thị là ước tính; mã theo dõi hiện là mã nội bộ cho tới khi có adapter hãng vận chuyển |
-| Đối soát thanh toán | Admin ghi nhận `paid` sau khi đối soát thực tế; mọi thay đổi trạng thái đều có lịch sử, V1 không tự chuyển tiền |
+| Đối soát thanh toán | Admin ghi nhận `paid` cho luồng thủ công sau khi đối soát; payOS và PayPal chỉ cập nhật từ API/webhook đã xác minh; mọi thay đổi trạng thái đều có lịch sử |
 | UI | Dịu, có tính biên tập, cảm hứng từ Clare nhưng tài sản và code phải nguyên bản |
+
+## Mức mô phỏng của bản demo — chốt ngày 2026-08-24
+
+- MoMo Sandbox đã có adapter tạo payUrl và nhận IPN xác minh chữ ký; trả sau, báo giá hãng vận chuyển và tracking hãng vẫn ở mức mô phỏng/cấu hình. PayPal Sandbox, SMTP và đăng nhập Google/Facebook dùng cấu hình tương ứng khi được cung cấp.
+- Giao diện phải ghi rõ trạng thái mô phỏng hoặc chưa cấu hình; không tuyên bố đã thanh toán, đã gửi email hoặc đã nhận phản hồi chính thức từ nhà cung cấp.
+- Credentials, webhook và adapter production nằm ngoài phạm vi hiện tại; chỉ triển khai khi chủ dự án yêu cầu riêng sau này.
 
 ## Thông tin cần có để bật báo giá vận chuyển hãng vận chuyển thật
 

@@ -29,6 +29,12 @@
         </form>
 
         @if ($isEditing)
+            <form class="admin-inline-delete" method="POST" action="{{ route('admin.catalog.attributes.destroy', $attribute) }}" onsubmit="return confirm('Xóa thuộc tính này? Chỉ các giá trị chưa được gắn với sản phẩm mới có thể bị xóa.')">
+                @csrf
+                @method('DELETE')
+                <button type="submit">Xóa thuộc tính</button>
+            </form>
+
             <section class="admin-catalog-section" aria-labelledby="admin-attribute-values-title">
                 <div class="admin-section-heading"><div><p class="admin-eyebrow">Giá trị có thể chọn</p><h2 id="admin-attribute-values-title">{{ $attribute->values->count() }} giá trị</h2></div><p>Một sản phẩm có thể nhận một hoặc nhiều giá trị tùy thuộc thuộc tính.</p></div>
 

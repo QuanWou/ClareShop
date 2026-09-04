@@ -6,12 +6,18 @@
         'pending' => 'Chờ đối soát',
         'paid' => 'Đã thanh toán',
         'refunded' => 'Đã hoàn tiền',
+        'failed' => 'Thanh toán thất bại',
+        'expired' => 'Đã hết hạn',
     ];
 @endphp
 
 @section('content')
     <section class="admin-page admin-detail-page" aria-labelledby="admin-order-title">
         <a class="admin-back-link" href="{{ route('admin.orders.index') }}">Trở về danh sách đơn</a>
+
+        @if ($errors->has('email'))
+            <div class="admin-alert admin-alert-error" role="alert">{{ $errors->first('email') }}</div>
+        @endif
 
         <div class="admin-detail-heading">
             <div>
@@ -21,7 +27,7 @@
             </div>
             <div class="admin-detail-statuses">
                 <span class="admin-status admin-status-{{ $order->status }}">{{ $order->statusLabel() }}</span>
-                <span class="admin-status admin-payment-{{ $order->payment_status }}">{{ $paymentLabels[$order->payment_status] }}</span>
+                <span class="admin-status admin-payment-{{ $order->payment_status }}">{{ $paymentLabels[$order->payment_status] ?? $order->payment_status }}</span>
             </div>
         </div>
 
@@ -140,14 +146,35 @@
                     @endif
                 </section>
 
+                <section class="admin-action-card" aria-labelledby="admin-order-email-title">
+                    <p class="admin-eyebrow">Email khách hàng</p>
+                    <h2 id="admin-order-email-title">Xác nhận đơn</h2>
+                    <p class="admin-action-note">
+                        Người nhận: <strong>{{ $order->customer_email }}</strong><br>
+                        Trạng thái: <strong>{{ $order->confirmation_email_sent_at ? 'Đã gửi lúc '.$order->confirmation_email_sent_at->format('H:i d/m/Y') : 'Chưa gửi qua SMTP thật' }}</strong>
+                    </p>
+                    <form method="POST" action="{{ route('admin.orders.confirmation-email.resend', $order) }}">
+                        @csrf
+                        <button type="submit">{{ $order->confirmation_email_sent_at ? 'Gửi lại email xác nhận' : 'Gửi email xác nhận' }}</button>
+                    </form>
+                    <p class="admin-action-note">Nút chỉ báo thành công khi Clare đang dùng SMTP thật; mailer dạng log/array không được tính là đã gửi.</p>
+                </section>
+
                 @foreach ($order->payments as $payment)
                     <section class="admin-action-card" aria-labelledby="payment-{{ $payment->id }}-title">
                         <p class="admin-eyebrow">{{ strtoupper($payment->provider) }}</p>
                         <h2 id="payment-{{ $payment->id }}-title">Thanh toán</h2>
                         <p class="admin-payment-amount">{{ \App\Modules\Shared\Support\Money::formatVnd($payment->amount) }}</p>
-                        <p class="admin-action-note">Hiện tại: <strong>{{ $paymentLabels[$payment->status] }}</strong></p>
+                        <p class="admin-action-note">Hiện tại: <strong>{{ $paymentLabels[$payment->status] ?? $payment->status }}</strong></p>
+                        @if ($payment->provider === 'paypal' && $payment->gateway_amount !== null)
+                            <p class="admin-action-note">PayPal: <strong>{{ number_format((float) $payment->gateway_amount, 2) }} {{ $payment->gateway_currency }}</strong> · 1 {{ $payment->gateway_currency }} = {{ number_format((float) $payment->exchange_rate, 0, ',', '.') }} VND</p>
+                            @if ($payment->provider_reference)<p class="admin-action-note">PayPal Order: {{ $payment->provider_reference }}</p>@endif
+                            @if ($payment->provider_transaction_id)<p class="admin-action-note">Capture: {{ $payment->provider_transaction_id }}</p>@endif
+                            <p class="admin-action-note">Trạng thái PayPal chỉ được cập nhật từ Capture API hoặc webhook đã xác minh, admin không thể tự đánh dấu đã thanh toán.</p>
+                        @endif
 
                         @if ($paymentNextStatuses[$payment->id]->isNotEmpty())
+                            @php($isRefundAction = collect($paymentNextStatuses[$payment->id])->contains('refunded'))
                             <form method="POST" action="{{ route('admin.orders.payment-status.update', [$order, $payment]) }}">
                                 @csrf
                                 @method('PATCH')
@@ -160,10 +187,13 @@
                                     </select>
                                 </label>
                                 <label>
-                                    <span>Ghi chú đối soát / mã giao dịch</span>
+                                    <span>{{ $isRefundAction ? 'Ghi chú hoàn tiền / mã hoàn tiền' : 'Ghi chú đối soát / mã giao dịch' }}</span>
                                     <textarea name="payment_note" rows="3" maxlength="2000" required>{{ old('payment_note') }}</textarea>
                                 </label>
-                                <button type="submit">Ghi nhận thanh toán</button>
+                                @if ($isRefundAction)
+                                    <p class="admin-action-note">Chỉ chọn thao tác này sau khi tiền đã được hoàn thực tế. Clare chỉ ghi nhận đối soát; không tự chuyển tiền qua cổng thanh toán.</p>
+                                @endif
+                                <button type="submit">{{ $isRefundAction ? 'Ghi nhận hoàn tiền' : 'Ghi nhận thanh toán' }}</button>
                             </form>
                         @endif
 

@@ -12,7 +12,13 @@ class ShowCustomerOrderAction
         return Order::query()
             ->whereKey($order->getKey())
             ->where('user_id', $user->getKey())
-            ->with(['items', 'payments', 'discount', 'statusHistories'])
+            ->with([
+                'items.variant.images',
+                'items.variant.product.images',
+                'payments',
+                'discount',
+                'statusHistories',
+            ])
             ->firstOrFail();
     }
 }

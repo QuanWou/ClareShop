@@ -13,7 +13,11 @@ class ShowCustomerAccountAction
         return [
             'orders' => Order::query()
                 ->where('user_id', $user->getKey())
-                ->with('discount')
+                ->with([
+                    'discount',
+                    'items.variant.images',
+                    'items.variant.product.images',
+                ])
                 ->orderByDesc('placed_at')
                 ->limit(6)
                 ->get(),
@@ -35,6 +39,7 @@ class ShowCustomerAccountAction
             'appointmentCount' => Appointment::query()
                 ->where('user_id', $user->getKey())
                 ->count(),
+            'voucherCount' => $user->vouchers()->count(),
             'wishlistProducts' => $user->wishlistProducts()
                 ->published()
                 ->withStorefrontSummary()

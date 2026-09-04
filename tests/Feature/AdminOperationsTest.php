@@ -4,10 +4,16 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Modules\Appointments\Actions\CreateAppointmentAction;
+use App\Modules\Blog\Models\BlogCategory;
+use App\Modules\Blog\Models\BlogPost;
+use App\Modules\Blog\Models\BlogTag;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
+use App\Modules\Catalog\Models\ProductAttribute;
+use App\Modules\Catalog\Models\ProductReview;
 use App\Modules\Catalog\Models\ProductVariant;
+use App\Modules\Media\Models\MediaAsset;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\Payment;
 use App\Modules\Promotions\Models\PromotionCode;
@@ -140,7 +146,7 @@ class AdminOperationsTest extends TestCase
         $admin = $this->admin();
         $variant = ProductVariant::query()->where('sku', 'CLR-HH-BRONZE')->firstOrFail();
         $stockBeforeCheckout = $variant->stock_quantity;
-        $order = $this->createOrder($variant, 'bank_transfer');
+        $order = $this->createOrder($variant, 'momo');
         $payment = Payment::query()->where('order_id', $order->getKey())->firstOrFail();
 
         $this->actingAs($admin)
@@ -577,6 +583,152 @@ class AdminOperationsTest extends TestCase
             ->assertSessionHasErrors('account_deletion');
 
         $this->assertNotSoftDeleted('users', ['id' => $admin->getKey()]);
+    }
+
+    public function test_admin_can_complete_safe_management_actions_for_content_media_and_catalog_support_data(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->post(route('admin.blog.taxonomy.store'), [
+                'type' => 'category',
+                'name' => 'Không gian nghỉ ngơi',
+                'description' => 'Gợi ý ánh sáng cho phòng ngủ.',
+            ])
+            ->assertRedirect();
+
+        $category = BlogCategory::query()->where('name', 'Không gian nghỉ ngơi')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.blog.taxonomy.categories.update', $category), [
+                'name' => 'Không gian thư giãn',
+                'description' => 'Gợi ý ánh sáng cho những khoảng nghỉ.',
+                'is_active' => true,
+                'sort_order' => 20,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('blog_categories', [
+            'id' => $category->getKey(),
+            'name' => 'Không gian thư giãn',
+            'is_active' => true,
+            'sort_order' => 20,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.blog.taxonomy.store'), [
+                'type' => 'tag',
+                'name' => 'Ánh sáng ấm',
+            ])
+            ->assertRedirect();
+
+        $tag = BlogTag::query()->where('name', 'Ánh sáng ấm')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.blog.taxonomy.tags.update', $tag), ['name' => 'Ánh sáng dịu'])
+            ->assertRedirect();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.blog.taxonomy.tags.destroy', $tag))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('blog_tags', ['id' => $tag->getKey()]);
+
+        $post = BlogPost::query()->create([
+            'author_id' => $admin->getKey(),
+            'blog_category_id' => $category->getKey(),
+            'title' => 'Những khoảng sáng bình yên',
+            'slug' => 'nhung-khoang-sang-binh-yen',
+            'content' => 'Nội dung thử nghiệm đủ dài để kiểm tra khôi phục bài viết trong khu vực quản trị.',
+            'status' => 'draft',
+        ]);
+        $post->delete();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.blog.posts.restore', $post))
+            ->assertRedirect(route('admin.blog.posts.edit', $post));
+
+        $this->assertNotSoftDeleted('blog_posts', ['id' => $post->getKey()]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.blog.taxonomy.categories.destroy', $category))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('blog_categories', ['id' => $category->getKey()]);
+        $this->assertNull($post->fresh()->blog_category_id);
+
+        $attribute = ProductAttribute::query()->create([
+            'name' => 'Thông số thử nghiệm',
+            'slug' => 'thong-so-thu-nghiem',
+            'filter_type' => 'text',
+            'is_filterable' => false,
+            'is_active' => true,
+            'sort_order' => 90,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.catalog.attributes.destroy', $attribute))
+            ->assertRedirect(route('admin.catalog.attributes.index'));
+
+        $this->assertDatabaseMissing('product_attributes', ['id' => $attribute->getKey()]);
+
+        $promotion = PromotionCode::query()->create([
+            'code' => 'SAFE-ARCHIVE',
+            'name' => 'Mã cần tắt',
+            'discount_type' => 'fixed',
+            'discount_value' => 50000,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.promotions.destroy', $promotion))
+            ->assertRedirect(route('admin.promotions.index'));
+
+        $this->assertDatabaseHas('promotion_codes', ['id' => $promotion->getKey(), 'is_active' => false]);
+
+        Storage::disk('public')->put('media/bedside.jpg', 'fixture');
+        $asset = MediaAsset::query()->create([
+            'uploaded_by' => $admin->getKey(),
+            'path' => 'media/bedside.jpg',
+            'original_name' => 'bedside.jpg',
+            'mime_type' => 'image/jpeg',
+            'size_bytes' => 7,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.media.update', $asset), ['alt_text' => 'Đèn ngủ trên bàn đầu giường'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('media_assets', ['id' => $asset->getKey(), 'alt_text' => 'Đèn ngủ trên bàn đầu giường']);
+
+        $reviewer = User::factory()->create();
+        $product = Product::query()->firstOrFail();
+        $review = ProductReview::query()->create([
+            'product_id' => $product->getKey(),
+            'user_id' => $reviewer->getKey(),
+            'rating' => 1,
+            'comment' => 'Đánh giá thử nghiệm cần được xóa cùng ảnh đính kèm.',
+            'status' => 'hidden',
+            'is_verified_purchase' => false,
+        ]);
+        $review->images()->create(['path' => 'reviews/spam.jpg', 'sort_order' => 0]);
+        Storage::disk('public')->put('reviews/spam.jpg', 'fixture');
+
+        $this->actingAs($admin)
+            ->delete(route('admin.reviews.destroy', $review))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('product_reviews', ['id' => $review->getKey()]);
+        Storage::disk('public')->assertMissing('reviews/spam.jpg');
+
+        $this->actingAs($admin)
+            ->delete(route('admin.media.destroy', $asset))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('media_assets', ['id' => $asset->getKey()]);
+        Storage::disk('public')->assertMissing('media/bedside.jpg');
     }
 
     private function admin(): User

@@ -33,7 +33,7 @@ class SiteContentManagementTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_can_edit_content_and_see_it_on_the_storefront(): void
+    public function test_admin_can_edit_content_without_rendering_the_global_announcement_on_the_storefront(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $content = $this->defaultTextContent();
@@ -60,7 +60,7 @@ class SiteContentManagementTest extends TestCase
 
         $this->get(route('catalog.home'))
             ->assertOk()
-            ->assertSee('Một thông báo mới từ Clare.');
+            ->assertDontSee('Một thông báo mới từ Clare.');
 
         $this->get(route('catalog.products.index'))
             ->assertOk()

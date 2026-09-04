@@ -15,11 +15,18 @@ class Payment extends Model
         'order_id',
         'provider',
         'provider_reference',
+        'provider_transaction_id',
         'amount',
         'currency',
+        'gateway_amount',
+        'gateway_currency',
+        'exchange_rate',
         'status',
         'paid_at',
+        'expires_at',
+        'webhook_confirmed_at',
         'failure_reason',
+        'approval_url',
         'payload',
     ];
 
@@ -27,7 +34,11 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'gateway_amount' => 'decimal:2',
+            'exchange_rate' => 'decimal:6',
             'paid_at' => 'datetime',
+            'expires_at' => 'datetime',
+            'webhook_confirmed_at' => 'datetime',
             'payload' => 'array',
         ];
     }
@@ -40,5 +51,10 @@ class Payment extends Model
     public function statusHistories(): HasMany
     {
         return $this->hasMany(PaymentStatusHistory::class);
+    }
+
+    public function webhookEvents(): HasMany
+    {
+        return $this->hasMany(PaymentWebhookEvent::class);
     }
 }

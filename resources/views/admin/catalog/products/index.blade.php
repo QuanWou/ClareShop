@@ -14,14 +14,15 @@
         </form>
 
         <div class="admin-table-wrap">
-            <table class="admin-table"><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Biến thể / ảnh</th><th>Giá từ</th><th>Xuất bản</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <table class="admin-table admin-products-table"><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Biến thể / ảnh</th><th>Tồn kho</th><th>Khoảng giá</th><th>Xuất bản</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
                 <tbody>
                     @forelse ($products as $product)
                         <tr>
-                            <td><strong>{{ $product->name }}</strong><span>{{ $product->slug }}</span></td>
+                            <td><div class="admin-product-listing"><img src="{{ $product->images->first()?->url ?? '/images/catalog/product-placeholder.svg' }}" alt="" width="58" height="58"><span><strong>{{ $product->name }}</strong><small>{{ $product->slug }}</small></span></div></td>
                             <td>{{ $product->category?->name ?? 'Chưa phân loại' }}</td>
-                            <td>{{ $product->variants_count }} biến thể<span>{{ $product->images_count }} ảnh</span></td>
-                            <td>{{ $product->minimum_price ? \App\Modules\Shared\Support\Money::formatVnd($product->minimum_price) : 'Chưa có' }}</td>
+                            <td><strong>{{ $product->active_variants_count }}/{{ $product->variants_count }} đang bán</strong><span>{{ $product->images_count }} ảnh</span></td>
+                            <td><strong>{{ number_format((int) $product->total_stock, 0, ',', '.') }} sản phẩm</strong><span>{{ (int) $product->total_stock > 0 ? 'Còn hàng' : 'Hết hàng' }}</span></td>
+                            <td><strong>{{ $product->minimum_price ? \App\Modules\Shared\Support\Money::formatVnd($product->minimum_price) : 'Chưa có giá' }}</strong>@if($product->maximum_price && (int)$product->maximum_price !== (int)$product->minimum_price)<span>đến {{ \App\Modules\Shared\Support\Money::formatVnd($product->maximum_price) }}</span>@endif</td>
                             <td>{{ $product->published_at?->format('d/m/Y H:i') ?? 'Chưa xuất bản' }}</td>
                             <td><span class="admin-status {{ $product->trashed() || ! $product->is_active ? 'admin-status-cancelled' : 'admin-status-completed' }}">{{ $product->trashed() ? 'Đã lưu trữ' : ($product->is_active ? 'Đang bật' : 'Đã tắt') }}</span></td>
                             <td>
@@ -37,7 +38,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td class="admin-empty-cell" colspan="7">Không tìm thấy sản phẩm phù hợp.</td></tr>
+                        <tr><td class="admin-empty-cell" colspan="8">Không tìm thấy sản phẩm phù hợp.</td></tr>
                     @endforelse
                 </tbody>
             </table>

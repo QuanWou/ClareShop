@@ -2,6 +2,7 @@
 
 namespace App\Modules\Orders\Actions;
 
+use App\Models\User;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Cart\Models\CartItem;
 use App\Modules\Catalog\Models\ProductVariant;
@@ -28,9 +29,11 @@ class CalculateCheckoutTotalsAction
         bool $lockForUpdate = false,
         bool $ignoreInvalidDiscount = false,
         bool $includeShippingOptions = false,
+        ?User $customer = null,
     ): CheckoutTotalsData {
         $cartItemsQuery = CartItem::query()
             ->where('cart_id', $cart->getKey())
+            ->where('is_selected', true)
             ->orderBy('id');
 
         if ($lockForUpdate) {
@@ -41,7 +44,7 @@ class CalculateCheckoutTotalsAction
 
         if ($cartItems->isEmpty()) {
             throw ValidationException::withMessages([
-                'cart' => 'Giỏ hàng đang trống.',
+                'cart' => 'Bạn chưa chọn sản phẩm nào để thanh toán.',
             ]);
         }
 
@@ -101,7 +104,7 @@ class CalculateCheckoutTotalsAction
         $shippingQuote = $this->resolveShippingQuote->execute($address, $totalWeightGrams, $shippingOption);
 
         try {
-            $discount = $this->calculatePromotionDiscount->execute($discountCode, $subtotal, $lockForUpdate);
+            $discount = $this->calculatePromotionDiscount->execute($discountCode, $subtotal, $lockForUpdate, $customer);
         } catch (ValidationException $exception) {
             if (! $ignoreInvalidDiscount || ! isset($exception->errors()['discount_code'])) {
                 throw $exception;

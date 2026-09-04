@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Modules\Catalog\Actions\GetStorefrontHomeAction;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
 use Database\Seeders\CatalogSeeder;
@@ -127,6 +128,11 @@ class CatalogStorefrontTest extends TestCase
             ->assertOk()
             ->assertSee('Chiếc đèn khiến bạn')
             ->assertSee('data-products-collage', false)
+            ->assertSee('id="catalog-category-filter"', false)
+            ->assertSee('data-catalog-filter-group', false)
+            ->assertSee('Tất cả đèn (27)')
+            ->assertDontSee('— Kiểu dáng &amp; cấu tạo')
+            ->assertDontSee('Đèn chùm (0)')
             ->assertSee('aria-current="page"', false)
             ->assertSee('<strong>27</strong> sản phẩm', false)
             ->assertSee('Phân trang sản phẩm')
@@ -137,6 +143,8 @@ class CatalogStorefrontTest extends TestCase
         $this->get('/products?category=den-tuong')
             ->assertOk()
             ->assertSee('Đèn tường')
+            ->assertSee('1 đang chọn')
+            ->assertSee('value="den-tuong" selected', false)
             ->assertSee('Gỡ bộ lọc')
             ->assertSee('Hoàng Hôn')
             ->assertDontSee('Thảo Mộc');
@@ -199,5 +207,27 @@ class CatalogStorefrontTest extends TestCase
             ->assertOk()
             ->assertSeeText('Thỏ Ôm Trăng')
             ->assertSee('images/catalog/moi4.png');
+    }
+
+    public function test_home_collection_cards_have_existing_cover_images(): void
+    {
+        $this->seed(CatalogSeeder::class);
+
+        $categories = app(GetStorefrontHomeAction::class)->execute()['categories'];
+
+        $this->assertCount(6, $categories);
+
+        foreach ($categories as $category) {
+            $this->assertNotEmpty($category->image_path, "Danh mục {$category->slug} chưa có ảnh đại diện.");
+            $this->assertFileExists(public_path($category->image_path));
+        }
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('images/catalog/moi1.png')
+            ->assertSee('images/catalog/moi3.png')
+            ->assertSee('images/catalog/den-ban-thao-moc-ngu.png')
+            ->assertSee('images/catalog/den-ban-ru-dem-ngu.png')
+            ->assertDontSee('<span class="image-placeholder"', false);
     }
 }

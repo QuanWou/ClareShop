@@ -67,7 +67,7 @@ class SocialAuthenticationController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('account.show'));
+        return redirect()->intended(route('catalog.home'));
     }
 
     private function ensureProvider(string $provider, SiteSettingsRegistry $settings): void

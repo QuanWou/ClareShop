@@ -1,9 +1,22 @@
 @extends('layouts.admin', ['title' => 'Quản lý '.$product->name])
 
 @section('content')
+    @php
+        $activeVariants = $product->variants->where('is_active', true);
+        $totalStock = (int) $product->variants->sum('stock_quantity');
+        $minimumPrice = $product->variants->min('price');
+        $maximumPrice = $product->variants->max('price');
+    @endphp
     <section class="admin-page" aria-labelledby="admin-product-edit-title">
         <a class="admin-back-link" href="{{ route('admin.catalog.products.index') }}">Trở về sản phẩm</a>
         <div class="admin-page-heading"><div><p class="admin-eyebrow">Catalog</p><h1 id="admin-product-edit-title">{{ $product->name }}</h1></div><p>{{ $product->slug }} · Cập nhật nội dung, biến thể, giá, tồn kho và ảnh tại một nơi.</p></div>
+
+        <dl class="admin-product-kpis" aria-label="Tổng quan sản phẩm">
+            <div><dt>Biến thể đang bán</dt><dd>{{ $activeVariants->count() }} / {{ $product->variants->count() }}</dd><small>{{ $product->variants->count() - $activeVariants->count() }} biến thể đang tắt</small></div>
+            <div><dt>Tổng tồn kho</dt><dd>{{ number_format($totalStock, 0, ',', '.') }}</dd><small>{{ $totalStock > 0 ? 'Sản phẩm sẵn sàng bán' : 'Tất cả biến thể đã hết hàng' }}</small></div>
+            <div><dt>Khoảng giá</dt><dd>{{ $minimumPrice ? \App\Modules\Shared\Support\Money::formatVnd($minimumPrice) : 'Chưa có' }}</dd><small>@if($maximumPrice && (int)$maximumPrice !== (int)$minimumPrice) Cao nhất {{ \App\Modules\Shared\Support\Money::formatVnd($maximumPrice) }} @else Giá đồng nhất @endif</small></div>
+            <div><dt>Hình ảnh</dt><dd>{{ $product->images->count() }}</dd><small>{{ $product->images->whereNotNull('product_variant_id')->count() }} ảnh gắn biến thể</small></div>
+        </dl>
 
         <form class="admin-promotion-form" method="POST" action="{{ route('admin.catalog.products.update', $product) }}">
             @csrf @method('PATCH')
@@ -85,7 +98,7 @@
             </form>
             <div class="admin-image-grid">
                 @forelse($product->images as $image)
-                    <article><img src="{{ $image->url }}" alt="{{ $image->alt_text ?? $product->name }}" width="320" height="320"><div><strong>#{{ $image->sort_order }} {{ $image->variant?->color_name ? '· '.$image->variant->color_name : '· Dùng chung' }}</strong><span>{{ $image->alt_text ?: 'Chưa có alt text' }}</span><form method="POST" action="{{ route('admin.catalog.products.images.destroy', [$product, $image]) }}">@csrf @method('DELETE')<button type="submit">Xóa ảnh</button></form></div></article>
+                    <article><img src="{{ $image->url }}" alt="{{ $image->alt_text ?? $product->name }}" width="320" height="320"><div><strong>#{{ $image->sort_order }} {{ $image->variant?->color_name ? '· '.$image->variant->color_name : '· Dùng chung' }}</strong><span>{{ $image->alt_text ?: 'Chưa có alt text' }}</span><small class="admin-image-source">{{ $image->disk }} · {{ $image->path }}</small><form method="POST" action="{{ route('admin.catalog.products.images.destroy', [$product, $image]) }}">@csrf @method('DELETE')<button type="submit">Xóa ảnh</button></form></div></article>
                 @empty
                     <p class="admin-empty">Chưa có ảnh nào. Tải ít nhất hai ảnh để card storefront chuyển ảnh khi hover.</p>
                 @endforelse

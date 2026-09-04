@@ -6,6 +6,8 @@
         'pending' => 'Chờ đối soát',
         'paid' => 'Đã thanh toán',
         'refunded' => 'Đã hoàn tiền',
+        'failed' => 'Thanh toán thất bại',
+        'expired' => 'Đã hết hạn thanh toán',
         default => $order->payment_status,
     };
 @endphp
@@ -23,7 +25,7 @@
 
     <dl class="order-tracking-facts">
         <div><dt>Mã đơn</dt><dd>{{ $order->number }}</dd></div>
-        <div><dt>Thanh toán</dt><dd>{{ $order->payment_method === 'cod' ? 'COD · ' : 'Chuyển khoản · ' }}{{ $paymentStatusLabel }}</dd></div>
+        <div><dt>Thanh toán</dt><dd>{{ \App\Modules\Orders\Support\PaymentMethodCatalog::get($order->payment_method)['short_label'] }} · {{ $paymentStatusLabel }}</dd></div>
         <div><dt>Vận chuyển</dt><dd>{{ $order->shipping_service ?? 'Giao tiêu chuẩn (ước tính)' }}</dd></div>
         @if ($order->shipping_tracking_number)
             <div><dt>Mã theo dõi</dt><dd>{{ $order->shipping_tracking_number }}</dd></div>

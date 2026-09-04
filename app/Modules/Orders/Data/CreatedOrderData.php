@@ -12,7 +12,6 @@ readonly class CreatedOrderData
     public function __construct(
         public Order $order,
         public Payment $payment,
-        public ?VietQrPaymentData $vietQr,
     ) {}
 
     public function toArray(): array
@@ -44,8 +43,15 @@ readonly class CreatedOrderData
                 'status' => $this->payment->status,
                 'amount' => (int) $this->payment->amount,
                 'currency' => $this->payment->currency,
-                'vietqr' => $this->vietQr?->toArray(),
+                'payos' => $this->payment->provider === 'payos' && is_array($this->payment->payload)
+                    ? $this->payment->payload
+                    : null,
                 'integration_status' => $this->payment->payload['integration_status'] ?? null,
+                'approval_url' => $this->payment->approval_url,
+                'gateway_amount' => $this->payment->gateway_amount !== null ? (float) $this->payment->gateway_amount : null,
+                'gateway_currency' => $this->payment->gateway_currency,
+                'exchange_rate' => $this->payment->exchange_rate !== null ? (float) $this->payment->exchange_rate : null,
+                'expires_at' => $this->payment->expires_at?->toIso8601String(),
             ],
         ];
     }

@@ -49,12 +49,13 @@
 
 **Đã hoàn thành phần nội bộ; chờ credentials để nối dịch vụ thật**
 
-1. Đã chốt COD, chuyển khoản VietQR động và không có VAT ở V1.
+1. Đã chốt COD, QR ngân hàng payOS động và không có VAT ở V1.
 2. Đã tạo schema `orders`, `order_items`, `order_status_histories`, `payments`, `inventory_movements`; biến thể có thêm trọng lượng đóng gói.
 3. Đã có Checkout API báo giá vận chuyển động theo địa chỉ/tổng trọng lượng và tạo đơn trong transaction; chỉ tài khoản đang hoạt động được dùng checkout, API snapshot sản phẩm/giá, trừ tồn và ghi inventory movement.
-4. Đã trả về QR VietQR động cho chuyển khoản, có `amount` đúng theo server và `addInfo` bằng mã đơn; trạng thái vẫn là `pending` chờ đối soát.
-5. Đã có UI Checkout/xác nhận đơn và back office cho luồng trạng thái đơn, xác nhận/hoàn thanh toán thủ công và hoàn tồn kho khi hủy. Checkout cho phép so sánh/chọn quote ước tính của GHN, GHTK hoặc J&T Express; hỗ trợ COD, VietQR, MoMo, thẻ ngân hàng và trả sau. Cần adapter vận chuyển thật, merchant gateway và webhook đối soát trước khi gọi các quote/thanh toán là chính thức.
-6. Đã có mã ưu đãi server-side và màn quản trị mã: một mã/đơn, snapshot audit, thời hạn, điều kiện đơn tối thiểu, mức giảm tối đa, giới hạn lượt dùng và bật/tắt. ETA/mã theo dõi hiện là mô phỏng nội bộ cho đến khi có adapter vận chuyển thật.
+4. Đã tích hợp Payment Link/QR payOS với thời hạn 3 phút, return URL, webhook xác minh chữ ký và xử lý idempotent.
+5. Đã có UI Checkout/xác nhận đơn và back office cho luồng trạng thái đơn, xác nhận/hoàn thanh toán và hoàn tồn kho khi hủy. Checkout cho phép so sánh/chọn quote ước tính của GHN, GHTK hoặc J&T Express; hỗ trợ COD, payOS, MoMo Sandbox, PayPal Sandbox và trả sau. Cần credentials production/adapter vận chuyển thật trước khi gọi các tích hợp là chính thức.
+6. Đã có Kho ưu đãi công khai, Ví voucher của khách, picker voucher trong checkout và màn quản trị mã. Một ưu đãi/đơn được snapshot audit; reservation giữ mã khi tạo đơn, chỉ redeem khi payment `paid`, còn đơn pending không phải COD tự hết hạn sau 30 phút và hoàn tồn/nhả mã. ETA/mã theo dõi hiện là mô phỏng nội bộ cho đến khi có adapter vận chuyển thật.
+7. Khách có thể phục hồi đơn chưa thanh toán bằng cách tạo payment attempt mới với phương thức khác, hoặc tự hủy đơn khi attempt đã hủy/thất bại/hết hạn. Hệ thống vô hiệu attempt cũ, chặn webhook đến muộn và tái sử dụng transaction hoàn tồn kho/voucher hiện có.
 
 ## Phase 5 — Consultation và installation
 

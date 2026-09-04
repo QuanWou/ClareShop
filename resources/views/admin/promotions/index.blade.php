@@ -20,6 +20,7 @@
                 <thead>
                     <tr>
                         <th>Mã / chương trình</th>
+                        <th>Nhận / dùng</th>
                         <th>Mức giảm</th>
                         <th>Điều kiện</th>
                         <th>Hiệu lực</th>
@@ -34,6 +35,18 @@
                             <td>
                                 <strong>{{ $promotion->code }}</strong>
                                 <span>{{ $promotion->name }}</span>
+                            </td>
+                            <td>
+                                <span>
+                                    {{ $promotion->claim_count }}
+                                    @if ($promotion->claim_limit)
+                                        / {{ $promotion->claim_limit }}
+                                    @else
+                                        / không giới hạn
+                                    @endif
+                                    lượt nhận
+                                </span>
+                                <span>{{ $promotion->is_public ? 'Công khai' : 'Nhập mã thủ công' }} · {{ $promotion->requires_claim ? 'Cần nhận trước' : 'Không cần nhận' }}</span>
                             </td>
                             <td>
                                 {{ $promotion->discount_type === 'percentage' ? rtrim(rtrim(number_format($promotion->discount_value, 2, '.', ''), '0'), '.') . '%' : \App\Modules\Shared\Support\Money::formatVnd($promotion->discount_value) }}
@@ -63,10 +76,17 @@
                             </td>
                             <td>
                                 <a class="admin-record-link" href="{{ route('admin.promotions.edit', $promotion) }}">Chỉnh sửa</a>
+                                @if ($promotion->is_active)
+                                    <form class="admin-inline-delete" method="POST" action="{{ route('admin.promotions.destroy', $promotion) }}" onsubmit="return confirm('Tắt mã này? Mã sẽ không còn dùng được nhưng lịch sử đơn hàng được giữ lại.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit">Tắt mã</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty
-                        <tr><td class="admin-empty-cell" colspan="7">Chưa có mã ưu đãi nào.</td></tr>
+                        <tr><td class="admin-empty-cell" colspan="8">Chưa có mã ưu đãi nào.</td></tr>
                     @endforelse
                 </tbody>
             </table>

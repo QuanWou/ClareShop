@@ -2,6 +2,7 @@
 
 namespace App\Modules\Orders\Actions;
 
+use App\Models\User;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Orders\Data\CheckoutTotalsData;
 use App\Modules\Orders\Data\ShippingAddressData;
@@ -16,6 +17,7 @@ class QuoteCheckoutAction
         ShippingAddressData $address,
         ?string $discountCode = null,
         ?string $shippingOption = null,
+        ?User $customer = null,
     ): CheckoutTotalsData
     {
         if ($cart === null) {
@@ -31,6 +33,7 @@ class QuoteCheckoutAction
             shippingOption: $shippingOption,
             ignoreInvalidDiscount: true,
             includeShippingOptions: true,
+            customer: $customer,
         );
     }
 }
