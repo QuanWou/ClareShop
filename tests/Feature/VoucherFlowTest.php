@@ -34,7 +34,10 @@ class VoucherFlowTest extends TestCase
         $this->get(route('promotions.index'))
             ->assertOk()
             ->assertSee('PUBLIC10')
-            ->assertDontSee('PRIVATE10');
+            ->assertDontSee('PRIVATE10')
+            ->assertSee('voucher-grid-compact', false)
+            ->assertSee('Có thể bạn sẽ thích')
+            ->assertSee('Mua sản phẩm');
 
         $this->post(route('promotions.claim', $public))
             ->assertRedirect(route('login'))

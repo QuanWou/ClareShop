@@ -27,7 +27,7 @@
 
             <div class="product-showcase-grid">
                 <div class="product-gallery" data-product-gallery data-reveal data-reveal-immediate>
-                    <div class="product-gallery-main" data-ambient>
+                    <div class="product-gallery-main" data-ambient data-gallery-zoom-surface>
                         @if ($displayImage)
                             <img
                                 src="{{ $displayImage->url }}"
@@ -46,12 +46,8 @@
                         @endif
 
                         @if ($displayImage)
-                            <button class="product-gallery-zoom" type="button" aria-label="Phóng to ảnh {{ $product->name }}" data-gallery-lightbox-open>
-                                <span aria-hidden="true">⌕</span> Phóng to
-                            </button>
+                            <span class="product-gallery-hint" aria-hidden="true">Di chuột trên ảnh để xem chi tiết</span>
                         @endif
-
-                        <span class="product-gallery-hint" aria-hidden="true">Chạm ảnh nhỏ để đổi góc nhìn</span>
                     </div>
 
                     @if ($product->images->count() > 1)
@@ -175,6 +171,16 @@
                             <input type="hidden" name="quantity" value="1" data-buy-now-quantity>
                             <button class="button button-secondary button-wide" type="submit" @disabled(! $selectedVariant->isInStock()) data-buy-now-button>Mua ngay</button>
                         </form>
+                        <button
+                            class="product-chat-analysis"
+                            type="button"
+                            data-chat-analyze-product="{{ $product->getKey() }}"
+                            data-chat-analyze-name="{{ $product->name }}"
+                            aria-label="Nhờ Clare phân tích sản phẩm {{ $product->name }}"
+                        >
+                            <span aria-hidden="true">✦</span>
+                            <strong>Nhờ Clare phân tích mẫu này</strong>
+                        </button>
                         @auth
                             <form action="{{ route('wishlist.toggle', $product) }}" method="POST" class="product-detail-wishlist" data-wishlist-form>@csrf<button type="submit" aria-pressed="{{ $product->is_wishlisted ?? false ? 'true' : 'false' }}" data-wishlist-button><span aria-hidden="true">{{ $product->is_wishlisted ?? false ? '♥' : '♡' }}</span> {{ $product->is_wishlisted ?? false ? 'Đã lưu yêu thích' : 'Lưu vào yêu thích' }}</button></form>
                         @endauth
@@ -316,11 +322,4 @@
         </section>
     @endif
 
-    @if ($displayImage)
-        <dialog class="product-gallery-lightbox" data-gallery-lightbox>
-            <button type="button" aria-label="Đóng ảnh phóng to" data-gallery-lightbox-close>×</button>
-            <img src="{{ $displayImage->url }}" alt="{{ $displayImage->alt_text ?? $product->name }}" data-gallery-lightbox-image>
-            <p>Cuộn để xem toàn bộ ảnh · nhấn Esc để đóng</p>
-        </dialog>
-    @endif
 @endsection

@@ -1,5 +1,6 @@
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const revealElements = [...document.querySelectorAll('[data-reveal], [data-reveal-item]')];
+const cinematicHome = document.querySelector('[data-cinematic-home]');
+const revealElements = cinematicHome ? [] : [...document.querySelectorAll('[data-reveal], [data-reveal-item]')];
 
 document.querySelectorAll('[data-reveal-group]').forEach((group) => {
     group.querySelectorAll(':scope > [data-reveal-item]').forEach((item, index) => {
@@ -55,7 +56,7 @@ if (storefrontHeader) {
     window.addEventListener('scroll', syncHeader, { passive: true });
 }
 
-const parallaxElements = reducedMotion ? [] : [...document.querySelectorAll('[data-parallax]')];
+const parallaxElements = reducedMotion || cinematicHome ? [] : [...document.querySelectorAll('[data-parallax]')];
 
 if (parallaxElements.length > 0) {
     let parallaxFrame;

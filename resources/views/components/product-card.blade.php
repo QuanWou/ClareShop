@@ -1,6 +1,7 @@
 @props([
     'product',
     'reveal' => false,
+    'ctaLabel' => 'Chọn màu và thêm giỏ',
 ])
 
 @php
@@ -10,12 +11,13 @@
     $maximumPrice = (float) $product->maximum_price;
 @endphp
 
-<article class="product-card" @if ($reveal) data-reveal-item @endif>
+<article class="product-card" data-motion-product="{{ $product->slug }}" @if ($reveal) data-reveal-item @endif>
     <a class="product-card-image" href="{{ route('catalog.products.show', $product) }}">
         @if ($primaryImage)
             <span class="product-card-media">
                 <img
                     class="product-card-image-primary"
+                    data-motion-image
                     src="{{ $primaryImage->url }}"
                     alt="{{ $primaryImage->alt_text ?? $product->name }}"
                     loading="lazy"
@@ -76,5 +78,5 @@
         </div>
     </div>
 
-    <a class="product-card-cta" href="{{ route('catalog.products.show', $product) }}">Chọn màu và thêm giỏ</a>
+    <a class="product-card-cta" href="{{ route('catalog.products.show', $product) }}">{{ $ctaLabel }}</a>
 </article>

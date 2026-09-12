@@ -19,6 +19,7 @@
                 <nav class="admin-navigation" aria-label="Điều hướng quản trị">
                     <a @class(['is-current' => request()->routeIs('admin.dashboard')]) href="{{ route('admin.dashboard') }}">Tổng quan</a>
                     <a @class(['is-current' => request()->routeIs('admin.orders.*')]) href="{{ route('admin.orders.index') }}">Đơn hàng</a>
+                    <a @class(['is-current' => request()->routeIs('admin.chat.*')]) href="{{ route('admin.chat.index') }}">Chat hỗ trợ</a>
                     <a @class(['is-current' => request()->routeIs('admin.catalog.products.*')]) href="{{ route('admin.catalog.products.index') }}">Sản phẩm</a>
                     <a @class(['is-current' => request()->routeIs('admin.catalog.categories.*')]) href="{{ route('admin.catalog.categories.index') }}">Danh mục</a>
                     <a @class(['is-current' => request()->routeIs('admin.catalog.attributes.*')]) href="{{ route('admin.catalog.attributes.index') }}">Thuộc tính</a>

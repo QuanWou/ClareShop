@@ -16,6 +16,17 @@ import '@fontsource/noto-serif/vietnamese-600.css';
 import '@fontsource/noto-serif/vietnamese-700.css';
 import './auth.js';
 import './storefront-motion.js';
+import './chat-widget.js';
+
+if (document.querySelector('[data-admin-chat]')) {
+    import('./chat-admin.js');
+}
+
+if (document.querySelector('[data-cinematic-home]')) {
+    import('./animations/index.js').then(({ mountCinematicHome }) => mountCinematicHome()).catch((error) => {
+        console.warn('Clare motion unavailable; the static storefront remains usable.', error);
+    });
+}
 
 if (document.querySelector('[data-rich-text-editor]')) {
     import('./admin-rich-text.js');
@@ -33,22 +44,40 @@ document.querySelectorAll('[data-storefront-toast]').forEach((toast) => {
 const productGallery = document.querySelector('[data-product-gallery]');
 const productGalleryMain = productGallery?.querySelector('[data-gallery-main]');
 const productGalleryThumbnails = productGallery?.querySelectorAll('[data-gallery-thumbnail]') ?? [];
-const productGalleryLightbox = document.querySelector('[data-gallery-lightbox]');
-const productGalleryLightboxImage = productGalleryLightbox?.querySelector('[data-gallery-lightbox-image]');
+const productGalleryZoomSurface = productGallery?.querySelector('[data-gallery-zoom-surface]');
+
+const resetProductGalleryZoom = () => {
+    productGalleryZoomSurface?.classList.remove('is-zooming');
+    productGalleryZoomSurface?.style.removeProperty('--gallery-zoom-x');
+    productGalleryZoomSurface?.style.removeProperty('--gallery-zoom-y');
+};
+
+if (productGalleryZoomSurface && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const updateProductGalleryZoom = (event) => {
+        const rect = productGalleryZoomSurface.getBoundingClientRect();
+        const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+        const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+
+        productGalleryZoomSurface.style.setProperty('--gallery-zoom-x', `${x}%`);
+        productGalleryZoomSurface.style.setProperty('--gallery-zoom-y', `${y}%`);
+        productGalleryZoomSurface.classList.add('is-zooming');
+    };
+
+    productGalleryZoomSurface.addEventListener('pointerenter', updateProductGalleryZoom);
+    productGalleryZoomSurface.addEventListener('pointermove', updateProductGalleryZoom);
+    productGalleryZoomSurface.addEventListener('pointerleave', resetProductGalleryZoom);
+    productGalleryZoomSurface.addEventListener('pointercancel', resetProductGalleryZoom);
+}
 
 const selectProductGalleryImage = (url, alt) => {
     if (!productGalleryMain || !url) {
         return;
     }
 
+    resetProductGalleryZoom();
     productGalleryMain.classList.add('is-changing');
     productGalleryMain.src = url;
     productGalleryMain.alt = alt || productGalleryMain.alt;
-
-    if (productGalleryLightboxImage) {
-        productGalleryLightboxImage.src = url;
-        productGalleryLightboxImage.alt = alt || productGalleryMain.alt;
-    }
 
     productGalleryThumbnails.forEach((thumbnail) => {
         const isCurrent = thumbnail.dataset.imageUrl === url;
@@ -66,22 +95,6 @@ productGalleryThumbnails.forEach((thumbnail) => {
     thumbnail.addEventListener('click', () => {
         selectProductGalleryImage(thumbnail.dataset.imageUrl, thumbnail.dataset.imageAlt);
     });
-});
-
-document.querySelector('[data-gallery-lightbox-open]')?.addEventListener('click', () => {
-    if (productGalleryLightbox?.showModal) {
-        productGalleryLightbox.showModal();
-    }
-});
-
-productGalleryLightbox?.querySelector('[data-gallery-lightbox-close]')?.addEventListener('click', () => {
-    productGalleryLightbox.close();
-});
-
-productGalleryLightbox?.addEventListener('click', (event) => {
-    if (event.target === productGalleryLightbox) {
-        productGalleryLightbox.close();
-    }
 });
 
 const optionGroups = document.querySelectorAll('[data-product-options]');
@@ -200,7 +213,7 @@ const motionIsReduced = window.matchMedia('(prefers-reduced-motion: reduce)').ma
 // downloading the same source more than once.
 const collectionImagePreloadCache = new Set();
 
-document.querySelectorAll('[data-collection-card]').forEach((card) => {
+document.querySelectorAll('body:not(.clare-cinematic) [data-collection-card]').forEach((card) => {
     const imageLayers = [...card.querySelectorAll('[data-collection-layer]')];
     let images;
 
@@ -1024,9 +1037,13 @@ if (checkoutForm) {
     const shippingService = checkoutForm.querySelector('[data-checkout-shipping-service]');
     const shippingWeight = checkoutForm.querySelector('[data-checkout-shipping-weight]');
     const shippingRule = checkoutForm.querySelector('[data-checkout-shipping-rule]');
-    const shippingOptionInputs = checkoutForm.querySelectorAll('[data-shipping-option]');
-    const shippingOptionPrices = checkoutForm.querySelectorAll('[data-shipping-option-price]');
-    const shippingOptionEtas = checkoutForm.querySelectorAll('[data-shipping-option-eta]');
+    const shippingOptionInput = checkoutForm.querySelector('[data-shipping-option]');
+    const shippingOptionPrices = document.querySelectorAll('[data-shipping-option-price]');
+    const shippingOptionEtas = document.querySelectorAll('[data-shipping-option-eta]');
+    const shippingSelectedLabel = checkoutForm.querySelector('[data-shipping-selected-label]');
+    const shippingSelectedService = checkoutForm.querySelector('[data-shipping-selected-service]');
+    const shippingSelectedPrice = checkoutForm.querySelector('[data-shipping-selected-price]');
+    const shippingSelectedEta = checkoutForm.querySelector('[data-shipping-selected-eta]');
     const hasInitialQuote = checkoutForm.dataset.hasInitialQuote === 'true';
     const initialSubtotal = checkoutForm.querySelector('[data-checkout-subtotal]')?.textContent ?? '';
     let quoteTimer;
@@ -1049,8 +1066,8 @@ if (checkoutForm) {
     };
 
     const resetQuote = (message) => {
-        shippingTotal.textContent = 'Nhập địa chỉ để ước tính';
-        deliveryEstimate.textContent = 'Hoàn thiện địa chỉ để xem';
+        shippingTotal.textContent = 'Chưa tính';
+        deliveryEstimate.textContent = 'Chưa xác định';
         discountTotal.textContent = '—';
         orderTotal.textContent = initialSubtotal;
         shippingDetails.hidden = true;
@@ -1060,6 +1077,8 @@ if (checkoutForm) {
         shippingOptionEtas.forEach((eta) => {
             eta.textContent = 'để xem phí';
         });
+        if (shippingSelectedPrice) shippingSelectedPrice.textContent = 'Chưa tính phí';
+        if (shippingSelectedEta) shippingSelectedEta.textContent = 'Chọn địa chỉ để xem ngày nhận';
         quoteStatus.textContent = message;
     };
 
@@ -1097,40 +1116,36 @@ if (checkoutForm) {
         shippingDetails.hidden = false;
 
         (data.shipping_options ?? []).forEach((option) => {
-            const price = checkoutForm.querySelector(`[data-shipping-option-price="${option.option}"]`);
-            const eta = checkoutForm.querySelector(`[data-shipping-option-eta="${option.option}"]`);
-
-            if (price) {
+            document.querySelectorAll(`[data-shipping-option-price="${option.option}"]`).forEach((price) => {
                 price.textContent = option.fee_formatted;
-            }
-
-            if (eta) {
+            });
+            document.querySelectorAll(`[data-shipping-option-eta="${option.option}"]`).forEach((eta) => {
                 eta.textContent = option.estimated_delivery_date_formatted ?? option.estimated_days_label ?? 'Đang cập nhật';
-            }
+            });
         });
+
+        if (shippingSelectedPrice) shippingSelectedPrice.textContent = shipping.fee_formatted;
+        if (shippingSelectedEta) shippingSelectedEta.textContent = shipping.estimated_delivery_date_formatted ?? shipping.estimated_days_label ?? 'Đang cập nhật';
 
         if (discount.applied) {
             discountTotal.textContent = `-${discount.amount_formatted}`;
             if (voucherSummary) voucherSummary.textContent = `Đã chọn mã ${discount.code}${discount.name ? ` — ${discount.name}` : ''} · giảm ${discount.amount_formatted}`;
-            setDiscountFeedback(
-                `Đã áp dụng ${discount.code}${discount.name ? ` — ${discount.name}` : ''}: giảm ${discount.amount_formatted}.`,
-                'success',
-            );
+            // The compact voucher summary already confirms the selection.
+            // Keep this second live region for errors only to avoid duplicate,
+            // overlapping success copy in the card.
+            setDiscountFeedback();
         } else {
             discountTotal.textContent = '—';
             if (voucherSummary && !(discountCode?.value.trim())) voucherSummary.textContent = 'Chọn một mã giảm giá phù hợp với đơn hàng.';
             setDiscountFeedback(discount.message ?? (discountCode?.value.trim() ? 'Mã chưa tạo ưu đãi cho đơn này.' : ''), discount.message ? 'error' : '');
         }
 
-        const etaCopy = shipping.estimated_delivery_date_formatted
-            ? `Nhận dự kiến ${shipping.estimated_delivery_date_formatted}.`
-            : 'Ngày nhận dự kiến đang được cập nhật.';
-        quoteStatus.textContent = `${shipping.provider} đã được chọn. ${etaCopy} Phí ship là ước tính nội bộ, chưa phải báo giá chính thức của đơn vị vận chuyển.`;
+        quoteStatus.textContent = `Đã cập nhật phí ${shipping.provider} theo địa chỉ đã chọn.`;
     };
 
     const quoteShipping = async ({ reportValidity = false } = {}) => {
         if (!hasValidShippingAddress(reportValidity)) {
-            quoteStatus.textContent = 'Vui lòng hoàn thiện thông tin giao hàng bắt buộc trước khi tính phí ship và kiểm tra ưu đãi.';
+            quoteStatus.textContent = 'Vui lòng chọn hoặc thêm địa chỉ nhận hàng.';
             return;
         }
 
@@ -1151,7 +1166,7 @@ if (checkoutForm) {
         }
 
         address.discount_code = discountCode?.value ?? '';
-        address.shipping_option = checkoutForm.querySelector('[data-shipping-option]:checked')?.value ?? '';
+        address.shipping_option = shippingOptionInput?.value ?? '';
 
         quoteButton.disabled = true;
         quoteStatus.textContent = 'Đang tính phí ship, ngày nhận dự kiến và kiểm tra ưu đãi…';
@@ -1221,13 +1236,26 @@ if (checkoutForm) {
         scheduleQuote();
     });
 
-    shippingOptionInputs.forEach((input) => {
-        input.addEventListener('change', () => {
-            // The address has not changed, so the server-rendered carrier
-            // quotes are still valid while the selected total is refreshed.
-            quoteStatus.textContent = 'Đơn vị vận chuyển đã thay đổi. Hệ thống đang cập nhật tổng thanh toán và ngày nhận dự kiến.';
-            quoteShipping({ reportValidity: false });
+    const shippingDialog = document.querySelector('[data-shipping-picker-dialog]');
+    const shippingChoices = shippingDialog?.querySelectorAll('[data-shipping-choice]') ?? [];
+
+    document.querySelectorAll('[data-shipping-picker-open]').forEach((button) => button.addEventListener('click', () => {
+        shippingChoices.forEach((choice) => {
+            choice.checked = choice.value === shippingOptionInput?.value;
         });
+        shippingDialog?.showModal();
+    }));
+    document.querySelectorAll('[data-shipping-picker-close]').forEach((button) => button.addEventListener('click', () => shippingDialog?.close()));
+    shippingDialog?.querySelector('[data-shipping-picker-confirm]')?.addEventListener('click', () => {
+        const selectedChoice = [...shippingChoices].find((choice) => choice.checked);
+        if (!selectedChoice || !shippingOptionInput) return;
+
+        shippingOptionInput.value = selectedChoice.value;
+        if (shippingSelectedLabel) shippingSelectedLabel.textContent = selectedChoice.dataset.shippingLabel ?? '';
+        if (shippingSelectedService) shippingSelectedService.textContent = selectedChoice.dataset.shippingService ?? '';
+        shippingDialog.close();
+        quoteStatus.textContent = 'Đang cập nhật phí và ngày nhận…';
+        quoteShipping({ reportValidity: false });
     });
 
     discountCode?.addEventListener('input', () => {
@@ -1473,6 +1501,7 @@ document.querySelectorAll('[data-payment-success-modal]').forEach((modal) => {
 document.querySelectorAll('[data-payment-status-poll]').forEach((watcher) => {
     const statusUrl = watcher.dataset.paymentStatusUrl;
     const paymentSuccessUrl = watcher.dataset.paymentSuccessUrl;
+    const initialStatus = watcher.dataset.paymentInitialStatus;
     const expiresAt = Date.parse(watcher.dataset.paymentExpiresAt ?? '');
     if (!statusUrl) {
         return;
@@ -1518,7 +1547,15 @@ document.querySelectorAll('[data-payment-status-poll]').forEach((watcher) => {
                 }
             } else if (['failed', 'expired'].includes(status)) {
                 stop();
-                window.location.reload();
+                // A terminal response used to call reload() unconditionally. If
+                // the rendered page already carried that state, every new load
+                // mounted this watcher again and caused a reload loop.
+                const currentResult = new URL(window.location.href).searchParams.get('payment');
+                if (status !== initialStatus && currentResult !== status) {
+                    const resultUrl = new URL(window.location.href);
+                    resultUrl.searchParams.set('payment', status);
+                    window.location.replace(resultUrl.toString());
+                }
             } else if (status === 'refunded') {
                 stop();
             } else if (Number.isFinite(expiresAt) && Date.now() >= expiresAt) {

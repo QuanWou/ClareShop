@@ -58,3 +58,21 @@ Views nằm tại `resources/views/<module>/`; route web nằm tại `routes/web
 6. Back office, phân quyền và nội dung động.
 7. Test, phân quyền, tối ưu và triển khai.
 
+
+<!-- CLARE_CINEMATIC_SKILL_START -->
+## Clare cinematic frontend guidance
+
+For premium motion, scroll storytelling, 3D depth, GSAP ScrollTrigger, Three.js, shaders, or cinematic landing-page work, use the `cinematic-web-experiences` skill in `.codex/skills/cinematic-web-experiences/SKILL.md` and read `docs/codex/clare-cinematic-motion-brief.md` before implementation.
+
+Project guardrails:
+- Preserve the existing Laravel + Blade architecture and existing business logic.
+- Do not migrate Clare to React/Next/Vue solely to implement animation.
+- Do not modify database, auth, cart, checkout, orders, payments, vouchers, or admin flows unless explicitly requested.
+- Prefer GSAP + ScrollTrigger and CSS 3D for normal cinematic motion.
+- Use Lenis only where it improves the experience.
+- Use Three.js only when CSS/DOM cannot reasonably produce the required effect; lazy-load it where possible.
+- Treat Home and Product Detail as the main surfaces for cinematic motion; transactional screens should remain clear and restrained.
+- Respect `prefers-reduced-motion`, provide mobile fallbacks, avoid horizontal overflow, and prioritize transform/opacity animations.
+- Inspect existing code first, make incremental changes, and verify build/runtime after each meaningful implementation stage.
+<!-- CLARE_CINEMATIC_SKILL_END -->
+

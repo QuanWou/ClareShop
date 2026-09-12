@@ -15,6 +15,7 @@
     $initialShipping = $initialQuote?->shipping;
     $initialDiscount = $initialQuote?->discount;
     $initialShippingOptions = collect($initialQuote?->shippingOptions ?? [])->mapWithKeys(fn ($quote) => [$quote->toArray()['option'] => $quote]);
+    $selectedShippingMethod = collect($shippingOptions)->firstWhere('code', $selectedShippingOption) ?? collect($shippingOptions)->first();
     $addressCopy = static function ($address): string {
         return collect([$address?->address_line_1, $address?->address_line_2, $address?->ward, $address?->district, $address?->city])->filter(fn ($part) => filled($part))->join(', ');
     };
@@ -56,14 +57,79 @@
 
                     <section class="checkout-section checkout-products-section" aria-labelledby="checkout-products-title"><div class="checkout-section-head"><div><p class="eyebrow">02 / Sản phẩm</p><h2 id="checkout-products-title">Sản phẩm trong đơn</h2></div><span class="checkout-products-count">{{ $cartLines->sum(fn ($line) => $line['item']->quantity) }} sản phẩm</span></div><div class="checkout-products-table" role="table" aria-label="Sản phẩm checkout"><div class="checkout-products-table-head" role="row"><span>Sản phẩm</span><span>Đơn giá</span><span>Số lượng</span><span>Thành tiền</span></div>@foreach ($cartLines as $line)<article class="checkout-product-row" role="row"><div class="checkout-product-main"><img src="{{ $line['variant']->imageUrl() }}" alt="{{ $line['product']->name }}" loading="lazy"><div><strong>{{ $line['product']->name }}</strong><small>{{ $line['variant']->color_name }} · SKU {{ $line['variant']->sku }}</small></div></div><span>{{ \App\Modules\Shared\Support\Money::formatVnd($line['unit_price']) }}</span><span>×{{ $line['item']->quantity }}</span><strong>{{ \App\Modules\Shared\Support\Money::formatVnd($line['line_total']) }}</strong></article>@endforeach</div></section>
 
-                    <section class="checkout-section checkout-voucher-section" aria-labelledby="checkout-voucher-title"><div class="checkout-inline-action"><div><p class="eyebrow">03 / Ưu đãi</p><h2 id="checkout-voucher-title">Voucher của Clare</h2><p class="checkout-inline-muted" data-checkout-voucher-summary>@if($initialDiscount?->isApplied()) Đã chọn mã {{ $initialDiscount->code }} · giảm {{ \App\Modules\Shared\Support\Money::formatVnd($initialDiscount->amount) }} @else Chọn một mã giảm giá phù hợp với đơn hàng. @endif</p></div><button type="button" class="checkout-outline-button" data-voucher-picker-open aria-haspopup="dialog">Chọn voucher</button></div><input class="checkout-voucher-hidden-input" name="discount_code" value="{{ $selectedDiscountCode }}" maxlength="50" autocomplete="off" data-checkout-discount-code><p class="checkout-discount-feedback" id="checkout-discount-feedback" aria-live="polite" hidden data-checkout-discount-feedback></p></section>
+                    <section class="checkout-section checkout-voucher-section" aria-labelledby="checkout-voucher-title">
+                        <div class="checkout-inline-action">
+                            <div class="checkout-voucher-copy">
+                                <p class="eyebrow">03 / Ưu đãi</p>
+                                <h2 id="checkout-voucher-title">Voucher của Clare</h2>
+                                <p class="checkout-inline-muted" data-checkout-voucher-summary>@if($initialDiscount?->isApplied()) Đã chọn mã {{ $initialDiscount->code }} · giảm {{ \App\Modules\Shared\Support\Money::formatVnd($initialDiscount->amount) }} @else Chọn một mã giảm giá phù hợp với đơn hàng. @endif</p>
+                                <p class="checkout-discount-feedback" id="checkout-discount-feedback" aria-live="polite" hidden data-checkout-discount-feedback></p>
+                            </div>
+                            <button type="button" class="checkout-outline-button" data-voucher-picker-open aria-haspopup="dialog">Chọn voucher</button>
+                        </div>
+                        <input class="checkout-voucher-hidden-input" name="discount_code" value="{{ $selectedDiscountCode }}" maxlength="50" autocomplete="off" data-checkout-discount-code>
+                    </section>
 
-                    <section class="checkout-section checkout-note-shipping-section" aria-labelledby="checkout-shipping-option-title"><div class="checkout-note-row"><label class="checkout-field"><span>Lời nhắn cho người bán <small>Không bắt buộc</small></span><input name="customer_note" value="{{ old('customer_note') }}" maxlength="2000" placeholder="Lưu ý cho Clare…"></label></div><div class="checkout-shipping-options" aria-labelledby="checkout-shipping-option-title"><div class="checkout-section-head"><div><p class="eyebrow">04 / Vận chuyển</p><h2 id="checkout-shipping-option-title">Phương án giao hàng</h2></div><p class="checkout-inline-muted">Phí và ngày giao thay đổi theo địa chỉ, khối lượng và đơn vị bạn chọn.</p></div><div class="shipping-methods">@foreach ($shippingOptions as $shippingOption) @php($optionQuote = $initialShippingOptions->get($shippingOption['code']))<label class="shipping-method" data-shipping-option-card="{{ $shippingOption['code'] }}"><input name="shipping_option" type="radio" value="{{ $shippingOption['code'] }}" @checked($selectedShippingOption === $shippingOption['code']) data-shipping-option><span class="shipping-method-copy"><strong>{{ $shippingOption['label'] }}</strong><small>{{ $shippingOption['service'] }} · {{ $shippingOption['description'] }}</small></span><span class="shipping-method-quote"><strong data-shipping-option-price="{{ $shippingOption['code'] }}">{{ $optionQuote ? \App\Modules\Shared\Support\Money::formatVnd($optionQuote->fee) : 'Nhập địa chỉ' }}</strong><small data-shipping-option-eta="{{ $shippingOption['code'] }}">{{ $optionQuote ? ($optionQuote->estimatedDeliveryAt?->locale('vi')->isoFormat('dddd, DD/MM') ?? 'Đang cập nhật') : 'để xem phí' }}</small></span></label>@endforeach</div></div></section>
+                    <section class="checkout-section checkout-note-shipping-section" aria-labelledby="checkout-shipping-option-title">
+                        <div class="checkout-section-head">
+                            <div><p class="eyebrow">04 / Vận chuyển</p><h2 id="checkout-shipping-option-title">Phương án giao hàng</h2></div>
+                            <span class="checkout-section-hint">Chạm để thay đổi</span>
+                        </div>
+                        <button class="checkout-shipping-summary" type="button" data-shipping-picker-open aria-haspopup="dialog">
+                            <span class="checkout-shipping-summary-mark" aria-hidden="true">↗</span>
+                            <span class="checkout-shipping-summary-copy">
+                                <strong data-shipping-selected-label>{{ $selectedShippingMethod['label'] ?? 'Chưa chọn đơn vị' }}</strong>
+                                <small data-shipping-selected-service>{{ $selectedShippingMethod['service'] ?? 'Chọn phương án phù hợp' }}</small>
+                            </span>
+                            <span class="checkout-shipping-summary-quote">
+                                <strong data-shipping-selected-price>{{ $initialShipping ? \App\Modules\Shared\Support\Money::formatVnd($initialShipping->fee) : 'Chưa tính phí' }}</strong>
+                                <small data-shipping-selected-eta>{{ $initialShipping?->estimatedDeliveryAt?->locale('vi')->isoFormat('dddd, DD/MM') ?? 'Chọn địa chỉ để xem ngày nhận' }}</small>
+                            </span>
+                            <span class="checkout-shipping-summary-change">Thay đổi</span>
+                        </button>
+                        <input type="hidden" name="shipping_option" value="{{ $selectedShippingOption }}" data-shipping-option>
+                        <div class="checkout-note-row"><label class="checkout-field"><span>Lời nhắn cho người bán <small>Không bắt buộc</small></span><input name="customer_note" value="{{ old('customer_note') }}" maxlength="2000" placeholder="Lưu ý cho Clare…"></label></div>
+                    </section>
 
                     <section class="checkout-section checkout-payment-section" aria-labelledby="checkout-payment-title"><div class="checkout-section-head"><div><p class="eyebrow">05 / Thanh toán</p><h2 id="checkout-payment-title">Phương thức thanh toán</h2></div><span class="checkout-section-hint">Thông tin được bảo mật</span></div><div class="payment-methods">@foreach ($paymentMethods as $code => $paymentMethod)<label class="payment-method"><input name="payment_method" type="radio" value="{{ $code }}" @checked($selectedPaymentMethod === $code)><span><strong>{{ $paymentMethod['label'] }}</strong><small>{{ $paymentMethod['description'] }}</small>@if ($paymentMethod['requires_qr'])<small class="payment-method-pending">Mã QR có hiệu lực 3 phút sau khi đặt đơn.</small>@elseif ($paymentMethod['is_simulated'])<small class="payment-method-pending">Đang chờ kết nối cổng thanh toán.</small>@endif</span></label>@endforeach</div></section>
                 </div>
 
-                <aside class="checkout-summary checkout-summary-sticky" aria-labelledby="checkout-summary-title"><div class="checkout-summary-top"><div><p class="eyebrow">06 / Xác nhận</p><h2 id="checkout-summary-title">Tổng thanh toán</h2></div><span class="checkout-summary-lock">Clare secure</span></div><div class="checkout-summary-lines"><div><span>Tạm tính</span><strong data-checkout-subtotal>{{ \App\Modules\Shared\Support\Money::formatVnd($subtotal) }}</strong></div><div><span>Phí giao hàng</span><strong data-checkout-shipping>{{ $initialShipping ? \App\Modules\Shared\Support\Money::formatVnd($initialShipping->fee) : 'Nhập địa chỉ để ước tính' }}</strong></div><div><span>Ngày nhận dự kiến</span><strong data-checkout-eta>{{ $initialShipping?->estimatedDeliveryAt?->locale('vi')->isoFormat('dddd, DD/MM') ?? 'Hoàn thiện địa chỉ để xem' }}</strong></div><div class="checkout-discount-total"><span>Giảm giá voucher</span><strong data-checkout-discount>@if($initialDiscount?->isApplied()) -{{ \App\Modules\Shared\Support\Money::formatVnd($initialDiscount->amount) }} @else — @endif</strong></div><div class="checkout-total"><span>Tổng thanh toán</span><strong data-checkout-total>{{ \App\Modules\Shared\Support\Money::formatVnd($initialQuote?->total ?? $subtotal) }}</strong></div></div><dl class="checkout-shipping-details" @if (! $initialShipping) hidden @endif data-checkout-shipping-details><div><dt>Đơn vị</dt><dd data-checkout-shipping-provider>{{ $initialShipping?->provider ?? '—' }}</dd></div><div><dt>Dịch vụ</dt><dd data-checkout-shipping-service>{{ $initialShipping?->service ?? '—' }}</dd></div><div><dt>Khối lượng</dt><dd data-checkout-shipping-weight>{{ $initialShipping ? number_format($initialShipping->totalWeightGrams, 0, ',', '.').' g' : '—' }}</dd></div><div><dt>Cách tính</dt><dd data-checkout-shipping-rule>{{ $initialShipping ? 'Theo địa chỉ, khối lượng và đơn vị vận chuyển.' : '—' }}</dd></div></dl><p class="checkout-quote-status" aria-live="polite" data-checkout-quote-status>{{ $initialShipping ? 'Phí giao hàng và ngày nhận đã được ước tính theo địa chỉ đã lưu.' : 'Chọn địa chỉ để so sánh phí GHN, GHTK và J&T Express.' }}</p><button class="checkout-quote-button" type="button" data-checkout-quote>Kiểm tra lại phí giao hàng</button><button class="button button-primary button-wide checkout-submit-button" type="submit">Đặt đơn hàng</button><p class="checkout-security-note">{{ $siteSettings->get('shipping_note') }} {{ $siteSettings->get('payment_note') }} Tổng tiền được tính lại tại máy chủ khi đặt đơn.</p></aside>
+                <aside class="checkout-summary checkout-summary-sticky" aria-labelledby="checkout-summary-title">
+                    <div class="checkout-summary-top">
+                        <div><p class="eyebrow">06 / Xác nhận</p><h2 id="checkout-summary-title">Tổng thanh toán</h2></div>
+                        <span class="checkout-summary-lock">Bảo mật</span>
+                    </div>
+
+                    <div class="checkout-summary-lines">
+                        <div><span>Tạm tính</span><strong data-checkout-subtotal>{{ \App\Modules\Shared\Support\Money::formatVnd($subtotal) }}</strong></div>
+                        <div class="checkout-discount-total"><span>Voucher</span><strong data-checkout-discount>@if($initialDiscount?->isApplied()) -{{ \App\Modules\Shared\Support\Money::formatVnd($initialDiscount->amount) }} @else — @endif</strong></div>
+                        <div><span>Phí giao hàng</span><strong data-checkout-shipping>{{ $initialShipping ? \App\Modules\Shared\Support\Money::formatVnd($initialShipping->fee) : 'Chưa tính' }}</strong></div>
+                        <div class="checkout-total"><span>Cần thanh toán</span><strong data-checkout-total>{{ \App\Modules\Shared\Support\Money::formatVnd($initialQuote?->total ?? $subtotal) }}</strong></div>
+                    </div>
+
+                    <section class="checkout-summary-delivery" aria-label="Thông tin giao hàng">
+                        <div class="checkout-summary-delivery-row">
+                            <span>Vận chuyển</span>
+                            <p><strong data-checkout-shipping-provider>{{ $initialShipping?->provider ?? 'Chưa chọn' }}</strong><small data-checkout-shipping-service>{{ $initialShipping?->service ?? '—' }}</small></p>
+                        </div>
+                        <div class="checkout-summary-delivery-row">
+                            <span>Dự kiến nhận</span>
+                            <strong data-checkout-eta>{{ $initialShipping?->estimatedDeliveryAt?->locale('vi')->isoFormat('dddd, DD/MM') ?? 'Chưa xác định' }}</strong>
+                        </div>
+                        <details class="checkout-shipping-details" @if (! $initialShipping) hidden @endif data-checkout-shipping-details>
+                            <summary>Chi tiết cách tính phí</summary>
+                            <dl>
+                                <div><dt>Khối lượng</dt><dd data-checkout-shipping-weight>{{ $initialShipping ? number_format($initialShipping->totalWeightGrams, 0, ',', '.').' g' : '—' }}</dd></div>
+                                <div><dt>Cách tính</dt><dd data-checkout-shipping-rule>{{ $initialShipping ? 'Theo địa chỉ, khối lượng và đơn vị vận chuyển.' : '—' }}</dd></div>
+                            </dl>
+                        </details>
+                    </section>
+
+                    <p class="checkout-quote-status" aria-live="polite" data-checkout-quote-status>{{ $initialShipping ? 'Đã cập nhật phí giao hàng theo địa chỉ đã chọn.' : 'Chọn địa chỉ để xem phí giao hàng.' }}</p>
+                    <button class="checkout-quote-button" type="button" data-checkout-quote>Tính lại phí giao hàng</button>
+                    <button class="button button-primary button-wide checkout-submit-button" type="submit">Đặt đơn hàng</button>
+                    <p class="checkout-security-note">Tổng tiền được kiểm tra lại an toàn trên hệ thống Clare trước khi tạo đơn.</p>
+                </aside>
             </form>
 
             <dialog class="checkout-modal checkout-address-dialog" data-address-picker-dialog aria-labelledby="checkout-address-dialog-title">
@@ -111,6 +177,24 @@
                     <div class="checkout-address-new-panel" data-address-new-panel hidden>@include('customers.account.partials.address-form', ['address' => null, 'formAction' => route('account.addresses.store'), 'formMethod' => 'POST', 'submitLabel' => 'Thêm địa chỉ'])</div>
                 </div>
                 <div class="checkout-modal-actions"><button type="button" class="button button-light" data-address-picker-close>Hủy</button><button type="button" class="button button-primary" data-address-picker-confirm>Dùng địa chỉ đã chọn</button></div>
+            </dialog>
+
+            <dialog class="checkout-modal checkout-shipping-dialog" data-shipping-picker-dialog aria-labelledby="checkout-shipping-dialog-title">
+                <div class="checkout-modal-heading">
+                    <div><p class="eyebrow">Giao hàng</p><h3 id="checkout-shipping-dialog-title">Chọn đơn vị vận chuyển</h3></div>
+                    <button type="button" class="checkout-modal-close" data-shipping-picker-close aria-label="Đóng">×</button>
+                </div>
+                <div class="checkout-modal-body shipping-methods shipping-methods-dialog">
+                    @foreach ($shippingOptions as $shippingOption)
+                        @php($optionQuote = $initialShippingOptions->get($shippingOption['code']))
+                        <label class="shipping-method" data-shipping-option-card="{{ $shippingOption['code'] }}">
+                            <input name="checkout_shipping_choice" type="radio" value="{{ $shippingOption['code'] }}" @checked($selectedShippingOption === $shippingOption['code']) data-shipping-choice data-shipping-label="{{ $shippingOption['label'] }}" data-shipping-service="{{ $shippingOption['service'] }}">
+                            <span class="shipping-method-copy"><strong>{{ $shippingOption['label'] }}</strong><small>{{ $shippingOption['service'] }} · {{ $shippingOption['description'] }}</small></span>
+                            <span class="shipping-method-quote"><strong data-shipping-option-price="{{ $shippingOption['code'] }}">{{ $optionQuote ? \App\Modules\Shared\Support\Money::formatVnd($optionQuote->fee) : 'Chưa tính phí' }}</strong><small data-shipping-option-eta="{{ $shippingOption['code'] }}">{{ $optionQuote ? ($optionQuote->estimatedDeliveryAt?->locale('vi')->isoFormat('dddd, DD/MM') ?? 'Đang cập nhật') : 'Chọn địa chỉ để xem' }}</small></span>
+                        </label>
+                    @endforeach
+                </div>
+                <div class="checkout-modal-actions"><button type="button" class="button button-light" data-shipping-picker-close>Hủy</button><button type="button" class="button button-primary" data-shipping-picker-confirm>Dùng đơn vị này</button></div>
             </dialog>
 
             <dialog class="checkout-modal checkout-voucher-dialog" data-voucher-picker-dialog aria-labelledby="checkout-voucher-dialog-title"><div class="checkout-modal-heading"><div><p class="eyebrow">Ưu đãi Clare</p><h3 id="checkout-voucher-dialog-title">Chọn voucher</h3></div><button type="button" class="checkout-modal-close" data-voucher-picker-close aria-label="Đóng">×</button></div><div class="checkout-modal-body"><div class="checkout-voucher-code-entry"><label for="checkout-voucher-code-input">Mã voucher</label><div><input id="checkout-voucher-code-input" value="{{ $selectedDiscountCode }}" maxlength="50" placeholder="Nhập mã Clare" data-voucher-code-input><button type="button" class="checkout-outline-button" data-voucher-apply>Áp dụng</button></div><p data-voucher-feedback aria-live="polite"></p></div><div class="checkout-voucher-list">@forelse ($voucherOptions as $option) @php($voucher = $option['voucher']) @php($promotion = $voucher->promotionCode)<button class="checkout-voucher-option" type="button" data-checkout-voucher-code="{{ $promotion->code }}" data-voucher-eligible="{{ $option['eligible'] ? 'true' : 'false' }}" @disabled(! $option['eligible'])><span class="checkout-voucher-ticket">{{ $promotion->discount_type === 'percentage' ? '％' : '₫' }}</span><span><strong>{{ $promotion->code }}</strong><b>{{ $promotion->name }}</b><small>{{ $option['eligible'] ? 'Giảm '.\App\Modules\Shared\Support\Money::formatVnd($option['amount']) : $option['reason'] }}</small><em>Đơn tối thiểu {{ \App\Modules\Shared\Support\Money::formatVnd((int) $promotion->minimum_order_amount) }} · @if($promotion->ends_at) Hết {{ $promotion->ends_at->format('d/m/Y') }} @else Không giới hạn @endif</em></span><i>Chọn</i></button>@empty<p class="checkout-modal-empty">Bạn chưa lưu voucher nào. <a href="{{ route('promotions.index') }}">Xem ưu đãi công khai</a></p>@endforelse</div></div><div class="checkout-modal-actions checkout-voucher-actions"><button type="button" class="button button-light" data-voucher-picker-close>Trở lại</button><button type="button" class="button button-primary" data-voucher-confirm>Đồng ý</button></div></dialog>

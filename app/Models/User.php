@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Modules\Appointments\Models\Appointment;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductReview;
+use App\Modules\Chat\Models\ChatConversation;
 use App\Modules\Customers\Models\UserAddress;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Promotions\Models\UserVoucher;
@@ -45,6 +46,16 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function chatConversations(): HasMany
+    {
+        return $this->hasMany(ChatConversation::class, 'customer_id');
+    }
+
+    public function assignedChatConversations(): HasMany
+    {
+        return $this->hasMany(ChatConversation::class, 'assigned_admin_id');
     }
 
     public function vouchers(): HasMany

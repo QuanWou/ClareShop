@@ -25,7 +25,7 @@
             @include('orders.partials.tracking', ['order' => $order])
 
             @if ($payment && in_array($payment->provider, ['momo', 'vnpay', 'payos', 'paypal'], true) && in_array($payment->status, ['unpaid', 'pending', 'expired'], true))
-                <span class="payment-status-poll" data-payment-status-poll data-payment-status-url="{{ route('account.orders.payment-status', $order) }}" data-payment-success-url="{{ route('account.orders.show', ['order' => $order, 'payment' => 'success']) }}" data-payment-expires-at="{{ $payment->expires_at?->toIso8601String() }}" hidden></span>
+                <span class="payment-status-poll" data-payment-status-poll data-payment-initial-status="{{ $payment->status }}" data-payment-status-url="{{ route('account.orders.payment-status', $order) }}" data-payment-success-url="{{ route('account.orders.show', ['order' => $order, 'payment' => 'success']) }}" data-payment-expires-at="{{ $payment->expires_at?->toIso8601String() }}" hidden></span>
             @endif
 
             @if ($payment?->status === 'paid' && in_array($payment->provider, ['momo', 'vnpay', 'payos', 'paypal'], true) && (session('payment_success') || request()->query('payment') === 'success'))

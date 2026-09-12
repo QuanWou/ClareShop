@@ -5,6 +5,7 @@ namespace App\Modules\Promotions\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Promotions\Actions\ClaimPromotionCodeAction;
+use App\Modules\Promotions\Actions\ListPromotionProductsAction;
 use App\Modules\Promotions\Actions\ListPublicPromotionCodesAction;
 use App\Modules\Promotions\Models\PromotionCode;
 use Illuminate\Contracts\View\View;
@@ -13,13 +14,17 @@ use Illuminate\Http\Request;
 
 class PromotionPageController extends Controller
 {
-    public function index(Request $request, ListPublicPromotionCodesAction $listPromotions): View
-    {
+    public function index(
+        Request $request,
+        ListPublicPromotionCodesAction $listPromotions,
+        ListPromotionProductsAction $listProducts,
+    ): View {
         /** @var User|null $customer */
         $customer = $request->user();
 
         return view('promotions.index', [
             'voucherRows' => $listPromotions->execute($customer),
+            'recommendedProducts' => $listProducts->execute($customer),
         ]);
     }
 

@@ -29,6 +29,11 @@ class CatalogStorefrontTest extends TestCase
             ->assertSee('data-reveal-group', false)
             ->assertSee('data-lamp-scene', false)
             ->assertSee('data-lamp-toggle', false)
+            ->assertSee('data-cinematic-home', false)
+            ->assertSee('data-depth-composition', false)
+            ->assertSee('data-wave-ribbon', false)
+            ->assertSee('data-motion-toggle', false)
+            ->assertSee('data-motion-product="ru-dem"', false)
             ->assertSee('Kéo dây để bật đèn')
             ->assertSee('id="main-content" tabindex="-1"', false)
             ->assertSee('data-mobile-menu', false)
@@ -54,8 +59,11 @@ class CatalogStorefrontTest extends TestCase
             ->assertOk()
             ->assertSee('class="catalog-product-detail-page"', false)
             ->assertSee('data-product-gallery', false)
+            ->assertSee('data-gallery-zoom-surface', false)
             ->assertSee('data-gallery-thumbnail', false)
             ->assertSee('data-image-url=', false)
+            ->assertDontSee('data-gallery-lightbox', false)
+            ->assertDontSee('data-gallery-lightbox-open', false)
             ->assertSee('Đỏ vang')
             ->assertSee('Kem ấm')
             ->assertSee('2.490.000 VND')
@@ -92,6 +100,24 @@ class CatalogStorefrontTest extends TestCase
         $this->get('/collections/den-thu-nghiem')
             ->assertOk()
             ->assertDontSee('Ngày Mai');
+    }
+
+    public function test_cinematic_home_has_an_accessible_empty_catalog_fallback(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('id="cinematic-hero-title"', false)
+            ->assertSee('href="#selected"', false)
+            ->assertSee('Những sản phẩm đầu tiên đang được chuẩn bị.')
+            ->assertDontSee('data-wave-ribbon', false)
+            ->assertDontSee('data-depth-layer="product"', false);
+    }
+
+    public function test_transactional_pages_do_not_opt_into_cinematic_motion(): void
+    {
+        foreach (['/cart', '/login', '/register'] as $path) {
+            $this->get($path)->assertOk()->assertDontSee('data-cinematic-home', false);
+        }
     }
 
     public function test_inactive_categories_are_not_available_on_the_storefront(): void

@@ -26,6 +26,8 @@ use App\Modules\Catalog\Http\Controllers\ProductReviewController;
 use App\Modules\Catalog\Http\Controllers\SearchController;
 use App\Modules\Catalog\Http\Controllers\SearchSuggestionController;
 use App\Modules\Catalog\Http\Controllers\WishlistController;
+use App\Modules\Chat\Http\Controllers\AdminChatController;
+use App\Modules\Chat\Http\Controllers\StorefrontChatController;
 use App\Modules\Content\Http\Controllers\AdminSiteContentController;
 use App\Modules\Customers\Http\Controllers\AuthenticationController;
 use App\Modules\Customers\Http\Controllers\CustomerAccountController;
@@ -36,16 +38,19 @@ use App\Modules\Orders\Http\Controllers\CheckoutController;
 use App\Modules\Orders\Http\Controllers\CheckoutPageController;
 use App\Modules\Orders\Http\Controllers\MomoPaymentController;
 use App\Modules\Orders\Http\Controllers\MomoWebhookController;
-use App\Modules\Orders\Http\Controllers\PayPalPaymentController;
-use App\Modules\Orders\Http\Controllers\PayPalWebhookController;
 use App\Modules\Orders\Http\Controllers\PayOsPaymentController;
 use App\Modules\Orders\Http\Controllers\PayOsWebhookController;
+use App\Modules\Orders\Http\Controllers\PayPalPaymentController;
+use App\Modules\Orders\Http\Controllers\PayPalWebhookController;
 use App\Modules\Promotions\Http\Controllers\CustomerVoucherController;
 use App\Modules\Promotions\Http\Controllers\PromotionPageController;
 use App\Modules\Settings\Http\Controllers\AdminSiteSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('catalog.home');
+
+Route::get('/chat', [StorefrontChatController::class, 'bootstrap'])->middleware('throttle:chat')->name('chat.bootstrap');
+Route::post('/chat/messages', [StorefrontChatController::class, 'store'])->middleware('throttle:chat')->name('chat.messages.store');
 
 Route::post('/webhooks/paypal', PayPalWebhookController::class)->name('webhooks.paypal');
 Route::post('/webhooks/momo', MomoWebhookController::class)->name('webhooks.momo');
@@ -121,6 +126,15 @@ Route::middleware(['auth', 'active-user'])->group(function (): void {
 
 Route::prefix('admin')->as('admin.')->middleware(['auth', 'admin'])->group(function (): void {
     Route::get('/', AdminDashboardController::class)->name('dashboard');
+
+    Route::get('/support/chat', [AdminChatController::class, 'index'])->name('chat.index');
+    Route::get('/support/chat/conversations', [AdminChatController::class, 'conversations'])->name('chat.conversations');
+    Route::get('/support/chat/conversations/{conversation}', [AdminChatController::class, 'show'])->name('chat.show');
+    Route::post('/support/chat/conversations/{conversation}/takeover', [AdminChatController::class, 'takeover'])->name('chat.takeover');
+    Route::post('/support/chat/conversations/{conversation}/reply', [AdminChatController::class, 'reply'])->name('chat.reply');
+    Route::post('/support/chat/conversations/{conversation}/return-to-bot', [AdminChatController::class, 'returnToBot'])->name('chat.return-to-bot');
+    Route::post('/support/chat/conversations/{conversation}/close', [AdminChatController::class, 'close'])->name('chat.close');
+    Route::patch('/support/chat/settings', [AdminChatController::class, 'updateSettings'])->name('chat.settings.update');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/reviews', [AdminProductReviewController::class, 'index'])->name('reviews.index');

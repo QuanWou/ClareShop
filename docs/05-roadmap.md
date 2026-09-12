@@ -74,9 +74,10 @@
 3. Đã có role gate `admin`, dashboard vận hành có biểu đồ/chỉ số, back office Order/Appointment, CRUD Catalog (danh mục, sản phẩm, biến thể, ảnh), quản lý mã ưu đãi và module khách hàng. Admin có thể tìm/lọc/sắp xếp khách, xem thông tin liên hệ, trạng thái tài khoản, tổng đơn, tổng tiền từ đơn hoàn tất, đơn gần đây và địa chỉ đã lưu; quyền cập nhật/khóa/xóa an toàn hiện có vẫn được giữ. Catalog archive mềm để giữ audit đơn hàng.
 4. Đã có module Content và trang `/admin/content` để sửa nội dung/ảnh biên tập của storefront; dữ liệu sản phẩm/danh mục tiếp tục sửa qua Catalog Admin và nội dung trạng thái/validation vẫn cố định theo nghiệp vụ.
 5. Đã có nhiều địa chỉ, wishlist, lịch sử xem, review mua thật/kiểm duyệt, taxonomy Catalog, Blog/TinyMCE, thư viện media, báo cáo, Settings/SEO/SMTP và đăng nhập Google/Facebook ở trạng thái cấu hình sẵn.
+6. Đã có Chat hỗ trợ với widget Lottie, resolver dữ liệu website không dùng AI, Gemini nhiều key cho câu hỏi ngoài website và luồng admin takeover/reply/return/close. Cấu hình production vẫn cần Gemini API keys hợp lệ và cache dùng chung nếu triển khai nhiều instance.
 
 ## Phase 7 — Chất lượng và triển khai
 
-- Feature tests cho catalog, cart, checkout, stock, appointment và các module mở rộng: đã có; lần chạy 2026-08-21 đạt 78/78 test, 645 assertion.
+- Feature tests cho catalog, cart, checkout, stock, appointment, chat và các module mở rộng: đã có; số liệu chạy gần nhất được báo trong kết quả kiểm thử của từng đợt thay đổi.
 - Authorization, validation, rate limit và CSRF: đã có ở các luồng chính; tiếp tục rà soát khi thêm tích hợp ngoài.
 - Cấu hình production, backup MySQL, queue/mail thật, OAuth/gateway/carrier và monitoring: chờ môi trường/credentials production.

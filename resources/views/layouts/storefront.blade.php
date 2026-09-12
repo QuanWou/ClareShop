@@ -260,5 +260,8 @@
                 <span>{{ $siteContent->get('global_footer_signature') }}</span>
             </div>
         </footer>
+        @if ($chatSettings->enabled('widget_enabled'))
+            @include('chat.widget')
+        @endif
     </body>
 </html>

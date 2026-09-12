@@ -2,6 +2,8 @@
 
 > Cập nhật 2026-08-21: Catalog phân cấp, thương hiệu/thuộc tính, review, nhiều địa chỉ, blog, wishlist/lịch sử xem, media, báo cáo, settings/SEO/SMTP và Socialite đã được triển khai. Xem bảng đối chiếu đầy đủ tại [`08-implementation-status-2026-08-21.md`](08-implementation-status-2026-08-21.md). Các tích hợp cần credentials thật vẫn được giữ ở trạng thái cấu hình sẵn, chưa được trình bày như dịch vụ production.
 
+> Cập nhật 2026-09-12: Chat hỗ trợ đã có router ưu tiên dữ liệu nội bộ, resolver Catalog/Order/Payment/Voucher/Policy, Gemini cho câu hỏi ngoài website với vòng quay nhiều key và failover/cooldown, widget storefront cùng bàn hỗ trợ admin. Gemini vẫn cần API key hợp lệ trong môi trường chạy thật.
+
 ## Môi trường đã kiểm tra
 
 | Thành phần | Trạng thái |
@@ -54,6 +56,7 @@
 - Với đơn còn `pending` nhưng payment đã `unpaid`, `failed` hoặc `expired`, chủ đơn có thể chọn lại một trong các phương thức thanh toán hoặc tự hủy. Mỗi lần đổi tạo payment attempt mới và vô hiệu attempt cũ; hủy đơn dùng chung transaction hoàn tồn kho/nhả voucher. Webhook đến muộn của attempt cũ không được phép ghi đè payment hiện hành.
 - Back office hiện có dashboard vận hành với biểu đồ trạng thái đơn, giá trị đơn bảy ngày, tồn kho thấp và các chỉ số khách hàng; có CRUD an toàn cho catalog (danh mục, sản phẩm, biến thể, ảnh), tìm kiếm/lọc, quản lý mã ưu đãi và module khách hàng. Danh sách khách hỗ trợ lọc/sắp xếp theo giá trị mua hàng, số đơn hoặc lần mua gần nhất; hồ sơ chi tiết hiển thị thông tin liên hệ, tổng đơn, tổng tiền từ đơn hoàn tất, sáu đơn gần đây, sổ địa chỉ và trạng thái truy cập. Ảnh admin upload vào disk `public` qua liên kết `public/storage`.
 - Đã có module Content tại `/admin/content`: admin sửa nội dung thương hiệu, header/footer, các khối trang chủ, catalog, collection, tìm kiếm, chi tiết sản phẩm và tiêu đề/giới thiệu trang tài khoản; ảnh hero, banner, câu chuyện và auth có thể thay trực tiếp. Nội dung Catalog theo từng sản phẩm/danh mục vẫn do CRUD Catalog quản lý; nhãn nghiệp vụ, trạng thái và validation giữ cố định trong code.
+- Đã có module Chat tại storefront và `/admin/support/chat`: hội thoại guest/authenticated được lưu, câu hỏi website đọc dữ liệu thật mà không gọi Gemini, câu hỏi ngoài phạm vi mới đi qua Gemini, và nhân viên có thể nhận/chuyển lại/đóng hội thoại. API key Gemini chỉ tồn tại ở backend; widget dùng `resources/js/Chat.json`, hỗ trợ desktop/mobile và lịch sử vẫn còn sau khi tải lại trang.
 
 ## Điều cần kiểm tra trước khi sửa tiếp
 
