@@ -92,6 +92,18 @@
                         </form>
                     @endif
                 </section>
+            @elseif ($order->payment_method === 'pay_later' && $order->payLaterPurchase)
+                <section class="order-payment-note">
+                    <p class="eyebrow">Mua trước, trả sau</p>
+                    <h2>Khoản trả sau đã được ghi nhận.</h2>
+                    <dl>
+                        <div><dt>Tổng cần thanh toán</dt><dd>{{ \App\Modules\Shared\Support\Money::formatVnd($order->payLaterPurchase->total_amount) }}</dd></div>
+                        <div><dt>Thời hạn</dt><dd>{{ $order->payLaterPurchase->term_months }} tháng</dd></div>
+                        <div><dt>Ngày đặt hàng</dt><dd>{{ $order->payLaterPurchase->starts_at->format('d/m/Y') }}</dd></div>
+                        <div><dt>Ngày đến hạn</dt><dd>{{ $order->payLaterPurchase->due_at->format('d/m/Y') }}</dd></div>
+                    </dl>
+                    <p>Bạn sẽ tự chọn phương thức thanh toán khi đến hạn. Clare không tự động trừ tiền; PayPal trong chức năng này chỉ là mô phỏng.</p>
+                </section>
             @else
                 <section class="order-payment-note">
                     <p class="eyebrow">{{ $paymentMethod['label'] }}</p>

@@ -6,6 +6,7 @@
 @php
     $selectedShippingOption = old('shipping_option', $defaultShippingOption);
     $selectedPaymentMethod = old('payment_method', 'cod');
+    $selectedPayLaterTerm = (int) old('pay_later_term_months', 2);
     $selectedDiscountCode = old('discount_code', $selectedDiscountCode);
     $fallbackSavedAddress = $savedAddresses->firstWhere('is_default', true) ?? $savedAddresses->first();
     $selectedSavedAddressId = old('saved_address', $fallbackSavedAddress?->getKey() ?? 'custom');
@@ -91,7 +92,43 @@
                         <div class="checkout-note-row"><label class="checkout-field"><span>Lời nhắn cho người bán <small>Không bắt buộc</small></span><input name="customer_note" value="{{ old('customer_note') }}" maxlength="2000" placeholder="Lưu ý cho Clare…"></label></div>
                     </section>
 
-                    <section class="checkout-section checkout-payment-section" aria-labelledby="checkout-payment-title"><div class="checkout-section-head"><div><p class="eyebrow">05 / Thanh toán</p><h2 id="checkout-payment-title">Phương thức thanh toán</h2></div><span class="checkout-section-hint">Thông tin được bảo mật</span></div><div class="payment-methods">@foreach ($paymentMethods as $code => $paymentMethod)<label class="payment-method"><input name="payment_method" type="radio" value="{{ $code }}" @checked($selectedPaymentMethod === $code)><span><strong>{{ $paymentMethod['label'] }}</strong><small>{{ $paymentMethod['description'] }}</small>@if ($paymentMethod['requires_qr'])<small class="payment-method-pending">Mã QR có hiệu lực 3 phút sau khi đặt đơn.</small>@elseif ($paymentMethod['is_simulated'])<small class="payment-method-pending">Đang chờ kết nối cổng thanh toán.</small>@endif</span></label>@endforeach</div></section>
+                    <section class="checkout-section checkout-payment-section" aria-labelledby="checkout-payment-title">
+                        <div class="checkout-section-head"><div><p class="eyebrow">05 / Thanh toán</p><h2 id="checkout-payment-title">Phương thức thanh toán</h2></div><span class="checkout-section-hint">Thông tin được bảo mật</span></div>
+                        <div class="payment-methods">
+                            @foreach ($paymentMethods as $code => $paymentMethod)
+                                <label class="payment-method">
+                                    <input name="payment_method" type="radio" value="{{ $code }}" @checked($selectedPaymentMethod === $code)>
+                                    <span>
+                                        <strong>{{ $paymentMethod['label'] }}</strong>
+                                        <small>{{ $paymentMethod['description'] }}</small>
+                                        @if ($paymentMethod['requires_qr'])
+                                            <small class="payment-method-pending">Mã QR có hiệu lực 3 phút sau khi đặt đơn.</small>
+                                        @elseif ($paymentMethod['is_simulated'] && $code !== 'pay_later')
+                                            <small class="payment-method-pending">Đang chờ kết nối cổng thanh toán.</small>
+                                        @endif
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+
+                        <div class="order-payment-note" data-pay-later-options @if($selectedPaymentMethod !== 'pay_later') hidden @endif>
+                            <p><strong>Đây là thanh toán toàn bộ vào ngày đến hạn, không phải trả góp.</strong></p>
+                            <fieldset>
+                                <legend>Chọn thời hạn thanh toán</legend>
+                                <label><input name="pay_later_term_months" type="radio" value="2" @checked($selectedPayLaterTerm === 2)> Thanh toán sau 2 tháng</label>
+                                <label><input name="pay_later_term_months" type="radio" value="4" @checked($selectedPayLaterTerm === 4)> Thanh toán sau 4 tháng</label>
+                            </fieldset>
+                            <dl>
+                                <div><dt>Tổng số tiền cần thanh toán</dt><dd data-pay-later-total>{{ \App\Modules\Shared\Support\Money::formatVnd($initialQuote?->total ?? $subtotal) }}</dd></div>
+                                <div><dt>Ngày đặt hàng</dt><dd>{{ now()->format('d/m/Y') }}</dd></div>
+                                <div><dt>Ngày đến hạn dự kiến</dt><dd data-pay-later-due-date data-due-2="{{ now()->addMonthsNoOverflow(2)->format('d/m/Y') }}" data-due-4="{{ now()->addMonthsNoOverflow(4)->format('d/m/Y') }}">{{ now()->addMonthsNoOverflow($selectedPayLaterTerm)->format('d/m/Y') }}</dd></div>
+                            </dl>
+                            <p>Đến hạn, Clare chỉ gửi thông báo. Bạn sẽ tự chọn PayPal mô phỏng, Clare Pay hoặc PayOS và xác nhận thanh toán; hệ thống không tự động trừ tiền.</p>
+                            <label><input name="pay_later_confirm" type="checkbox" value="1" @checked(old('pay_later_confirm'))> Tôi xác nhận thời hạn và nghĩa vụ thanh toán.</label>
+                            @error('pay_later_term_months')<small class="account-field-error">{{ $message }}</small>@enderror
+                            @error('pay_later_confirm')<small class="account-field-error">{{ $message }}</small>@enderror
+                        </div>
+                    </section>
                 </div>
 
                 <aside class="checkout-summary checkout-summary-sticky" aria-labelledby="checkout-summary-title">

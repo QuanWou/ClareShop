@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Billing\Actions\UpdatePayLaterStatusesAction;
 use App\Modules\Orders\Actions\ExpirePendingPayPalPaymentsAction;
 use App\Modules\Orders\Actions\ExpirePendingQrPaymentsAction;
 use App\Modules\Orders\Actions\ReconcilePendingPayOsPaymentsAction;
@@ -30,4 +31,9 @@ Schedule::call(fn () => app(ReconcilePendingPayOsPaymentsAction::class)->execute
 Schedule::call(fn () => app(ExpirePendingVoucherReservationsAction::class)->execute())
     ->name('vouchers:expire-reservations')
     ->everyMinute()
+    ->withoutOverlapping();
+
+Schedule::call(fn () => app(UpdatePayLaterStatusesAction::class)->execute())
+    ->name('billing:update-pay-later-statuses')
+    ->hourly()
     ->withoutOverlapping();

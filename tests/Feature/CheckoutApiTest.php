@@ -213,14 +213,14 @@ class CheckoutApiTest extends TestCase
         ]);
     }
 
-    public function test_checkout_creates_pending_payment_records_for_momo_and_pay_later(): void
+    public function test_checkout_creates_payment_records_for_momo_and_pay_later(): void
     {
         $methods = [
-            'momo' => 'momo',
-            'pay_later' => 'pay_later_review',
+            'momo' => ['provider' => 'momo', 'status' => 'pending'],
+            'pay_later' => ['provider' => 'pay_later', 'status' => 'unpaid'],
         ];
 
-        foreach ($methods as $method => $provider) {
+        foreach ($methods as $method => $expectation) {
             $customer = User::factory()->create();
             $variant = ProductVariant::query()->where('sku', 'CLR-TM-OLIVE')->firstOrFail();
             $cart = $this->createGuestCartWithItem($variant, 1);
@@ -234,16 +234,24 @@ class CheckoutApiTest extends TestCase
                     'customer_name' => 'Khách thử nghiệm',
                     'customer_phone' => '0901234567',
                     'payment_method' => $method,
+                    ...($method === 'pay_later' ? ['pay_later_term_months' => 2, 'pay_later_confirm' => true] : []),
                 ]);
 
             $response
                 ->assertCreated()
                 ->assertJsonPath('data.order.payment_method', $method)
-                ->assertJsonPath('data.order.payment_status', 'pending')
-                ->assertJsonPath('data.payment.provider', $provider)
-                ->assertJsonPath('data.payment.status', 'pending')
-                ->assertJsonPath('data.payment.integration_status', 'pending_gateway_integration')
+                ->assertJsonPath('data.order.payment_status', $expectation['status'])
+                ->assertJsonPath('data.payment.provider', $expectation['provider'])
+                ->assertJsonPath('data.payment.status', $expectation['status'])
                 ->assertJsonPath('data.payment.payos', null);
+
+            if ($method === 'pay_later') {
+                $this->assertDatabaseHas('pay_later_purchases', [
+                    'user_id' => $customer->getKey(),
+                    'term_months' => 2,
+                    'status' => 'active',
+                ]);
+            }
         }
 
         $this->assertDatabaseCount('orders', 2);

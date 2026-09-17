@@ -4,6 +4,8 @@
 
 > Cập nhật 2026-09-12: Chat hỗ trợ đã có router ưu tiên dữ liệu nội bộ, resolver Catalog/Order/Payment/Voucher/Policy, Gemini cho câu hỏi ngoài website với vòng quay nhiều key và failover/cooldown, widget storefront cùng bàn hỗ trợ admin. Gemini vẫn cần API key hợp lệ trong môi trường chạy thật.
 
+> Cập nhật 2026-09-15: Đã triển khai mua trước, trả sau 2/4 tháng và ví Clare Pay. PayPal trong luồng trả sau chỉ là mô phỏng; Clare Pay và PayOS chỉ xử lý sau thao tác xác nhận của khách, còn PayOS chỉ hoàn tất qua webhook/API đã xác minh. Scheduler chỉ cập nhật trạng thái và gửi nhắc hạn, không tự động trừ tiền.
+
 ## Môi trường đã kiểm tra
 
 | Thành phần | Trạng thái |
@@ -57,6 +59,7 @@
 - Back office hiện có dashboard vận hành với biểu đồ trạng thái đơn, giá trị đơn bảy ngày, tồn kho thấp và các chỉ số khách hàng; có CRUD an toàn cho catalog (danh mục, sản phẩm, biến thể, ảnh), tìm kiếm/lọc, quản lý mã ưu đãi và module khách hàng. Danh sách khách hỗ trợ lọc/sắp xếp theo giá trị mua hàng, số đơn hoặc lần mua gần nhất; hồ sơ chi tiết hiển thị thông tin liên hệ, tổng đơn, tổng tiền từ đơn hoàn tất, sáu đơn gần đây, sổ địa chỉ và trạng thái truy cập. Ảnh admin upload vào disk `public` qua liên kết `public/storage`.
 - Đã có module Content tại `/admin/content`: admin sửa nội dung thương hiệu, header/footer, các khối trang chủ, catalog, collection, tìm kiếm, chi tiết sản phẩm và tiêu đề/giới thiệu trang tài khoản; ảnh hero, banner, câu chuyện và auth có thể thay trực tiếp. Nội dung Catalog theo từng sản phẩm/danh mục vẫn do CRUD Catalog quản lý; nhãn nghiệp vụ, trạng thái và validation giữ cố định trong code.
 - Đã có module Chat tại storefront và `/admin/support/chat`: hội thoại guest/authenticated được lưu, câu hỏi website đọc dữ liệu thật mà không gọi Gemini, câu hỏi ngoài phạm vi mới đi qua Gemini, và nhân viên có thể nhận/chuyển lại/đóng hội thoại. API key Gemini chỉ tồn tại ở backend; widget dùng `resources/js/Chat.json`, hỗ trợ desktop/mobile và lịch sử vẫn còn sau khi tải lại trang.
+- Đã có module Billing cho khoản mua trước, trả sau và Clare Pay: lưu kỳ hạn/ngày đến hạn/trạng thái riêng; nạp ví hoặc thanh toán trả sau qua PayOS có attempt riêng và chống webhook lặp; nhắc hạn xuất hiện qua email, thông báo tài khoản và tin nhắn hệ thống trong chat.
 
 ## Điều cần kiểm tra trước khi sửa tiếp
 

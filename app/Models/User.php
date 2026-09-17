@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Modules\Appointments\Models\Appointment;
+use App\Modules\Billing\Models\ClarePayWallet;
+use App\Modules\Billing\Models\PayLaterPurchase;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\ProductReview;
 use App\Modules\Chat\Models\ChatConversation;
@@ -16,6 +18,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -46,6 +49,16 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function clarePayWallet(): HasOne
+    {
+        return $this->hasOne(ClarePayWallet::class);
+    }
+
+    public function payLaterPurchases(): HasMany
+    {
+        return $this->hasMany(PayLaterPurchase::class);
     }
 
     public function chatConversations(): HasMany

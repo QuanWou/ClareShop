@@ -20,6 +20,7 @@
 | Khuyến mãi V1 | Một mã trên mỗi đơn; giảm tiền hàng, không giảm phí ship; mã có thể được nhận vào Ví voucher. Khi tạo đơn, voucher được giữ trong transaction; chỉ dùng chính thức khi payment `paid`, pending không phải COD hết hạn sau 30 phút và tự nhả voucher/hoàn tồn |
 | ETA đơn hàng | Mô phỏng từ quote nội bộ, hiển thị là ước tính; mã theo dõi hiện là mã nội bộ cho tới khi có adapter hãng vận chuyển |
 | Đối soát thanh toán | Admin ghi nhận `paid` cho luồng thủ công sau khi đối soát; payOS và PayPal chỉ cập nhật từ API/webhook đã xác minh; mọi thay đổi trạng thái đều có lịch sử |
+| Mua trước, trả sau | Trả toàn bộ sau 2 hoặc 4 tháng; PayPal chỉ mô phỏng. Khi đến hạn khách tự chọn PayPal mô phỏng, Clare Pay hoặc PayOS và phải xác nhận; hệ thống chỉ nhắc hạn, không tự động trừ tiền |
 | UI | Dịu, có tính biên tập, cảm hứng từ Clare nhưng tài sản và code phải nguyên bản |
 
 ## Mức mô phỏng của bản demo — chốt ngày 2026-08-24

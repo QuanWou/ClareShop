@@ -50,6 +50,15 @@
                 <section class="order-payment-note payment-qr-expired-card"><p class="eyebrow">payOS</p><h2>Phiên QR không còn hiệu lực.</h2><p>Phiên thanh toán cũ không thể tiếp tục sử dụng. Bạn có thể tạo mã payOS mới cho đúng đơn này.</p><form method="POST" action="{{ route('payments.payos.retry', [$order, $payment]) }}">@csrf<button class="button button-primary" type="submit">Tạo mã payOS mới (3 phút)</button></form></section>
             @endif
 
+            @if ($order->payment_method === 'pay_later' && $order->payLaterPurchase)
+                <section class="order-payment-note">
+                    <p class="eyebrow">Mua trước, trả sau</p>
+                    <h2>{{ $order->payLaterPurchase->statusLabel() }}</h2>
+                    <p>Thanh toán toàn bộ {{ \App\Modules\Shared\Support\Money::formatVnd($order->payLaterPurchase->amount_due) }} vào ngày {{ $order->payLaterPurchase->due_at->format('d/m/Y') }}. Hệ thống không tự động trừ tiền.</p>
+                    @if($order->payLaterPurchase->canPayNow())<a class="button button-primary" href="{{ route('account.pay-later.pay', $order->payLaterPurchase) }}">Thanh toán ngay</a>@endif
+                </section>
+            @endif
+
             @include('orders.partials.customer-payment-actions', [
                 'order' => $order,
                 'payment' => $payment,

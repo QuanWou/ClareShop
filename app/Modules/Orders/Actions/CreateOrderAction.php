@@ -3,6 +3,7 @@
 namespace App\Modules\Orders\Actions;
 
 use App\Models\User;
+use App\Modules\Billing\Actions\CreatePayLaterPurchaseAction;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Cart\Models\CartItem;
 use App\Modules\Catalog\Models\ProductVariant;
@@ -26,6 +27,7 @@ class CreateOrderAction
         private readonly InitializePayOsPaymentAction $initializePayOsPayment,
         private readonly CreatePaymentAttemptAction $createPaymentAttempt,
         private readonly ReservePromotionForOrderAction $reservePromotion,
+        private readonly CreatePayLaterPurchaseAction $createPayLaterPurchase,
     ) {}
 
     public function execute(Cart $cart, User $customer, array $validated): CreatedOrderData
@@ -129,6 +131,23 @@ class CreateOrderAction
                 actorId: $userId,
                 historyNote: 'Thanh toán được khởi tạo từ checkout.',
             );
+
+            if ($validated['payment_method'] === 'pay_later') {
+                $purchase = $this->createPayLaterPurchase->execute(
+                    $order,
+                    $customer,
+                    (int) $validated['pay_later_term_months'],
+                );
+                $payment->update([
+                    'payload' => [
+                        'payment_method' => 'pay_later',
+                        'simulation' => true,
+                        'term_months' => $purchase->term_months,
+                        'due_at' => $purchase->due_at->toIso8601String(),
+                        'automatic_debit' => false,
+                    ],
+                ]);
+            }
 
             CartItem::query()
                 ->where('cart_id', $lockedCart->getKey())

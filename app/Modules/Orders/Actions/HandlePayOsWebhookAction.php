@@ -2,6 +2,7 @@
 
 namespace App\Modules\Orders\Actions;
 
+use App\Modules\Billing\Actions\HandleBillingPayOsWebhookAction;
 use App\Modules\Orders\Gateways\PayOsClient;
 use App\Modules\Orders\Models\Payment;
 use App\Modules\Orders\Models\PaymentWebhookEvent;
@@ -12,6 +13,7 @@ class HandlePayOsWebhookAction
     public function __construct(
         private readonly PayOsClient $client,
         private readonly ConfirmPayOsPaymentAction $confirmPayment,
+        private readonly HandleBillingPayOsWebhookAction $handleBillingPayment,
     ) {}
 
     /** @param array<string, mixed> $payload */
@@ -48,6 +50,17 @@ class HandlePayOsWebhookAction
             ->first();
 
         if ($payment === null) {
+            $billingAttempt = $this->handleBillingPayment->execute($data);
+            if ($billingAttempt !== null) {
+                $event->update([
+                    'status' => 'processed',
+                    'processed_at' => now(),
+                    'failure_reason' => null,
+                ]);
+
+                return $event->fresh();
+            }
+
             $event->update([
                 'status' => 'ignored',
                 'processed_at' => now(),

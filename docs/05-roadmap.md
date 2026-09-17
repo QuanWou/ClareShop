@@ -56,6 +56,7 @@
 5. Đã có UI Checkout/xác nhận đơn và back office cho luồng trạng thái đơn, xác nhận/hoàn thanh toán và hoàn tồn kho khi hủy. Checkout cho phép so sánh/chọn quote ước tính của GHN, GHTK hoặc J&T Express; hỗ trợ COD, payOS, MoMo Sandbox, PayPal Sandbox và trả sau. Cần credentials production/adapter vận chuyển thật trước khi gọi các tích hợp là chính thức.
 6. Đã có Kho ưu đãi công khai, Ví voucher của khách, picker voucher trong checkout và màn quản trị mã. Một ưu đãi/đơn được snapshot audit; reservation giữ mã khi tạo đơn, chỉ redeem khi payment `paid`, còn đơn pending không phải COD tự hết hạn sau 30 phút và hoàn tồn/nhả mã. ETA/mã theo dõi hiện là mô phỏng nội bộ cho đến khi có adapter vận chuyển thật.
 7. Khách có thể phục hồi đơn chưa thanh toán bằng cách tạo payment attempt mới với phương thức khác, hoặc tự hủy đơn khi attempt đã hủy/thất bại/hết hạn. Hệ thống vô hiệu attempt cũ, chặn webhook đến muộn và tái sử dụng transaction hoàn tồn kho/voucher hiện có.
+8. Đã triển khai mua trước, trả sau 2/4 tháng, Clare Pay, nạp ví qua PayOS, thanh toán chủ động khi đến hạn và nhắc hạn qua email/tài khoản/chat; không có cơ chế tự động trừ tiền.
 
 ## Phase 5 — Consultation và installation
 

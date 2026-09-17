@@ -3,6 +3,7 @@
 namespace App\Modules\Orders\Models;
 
 use App\Models\User;
+use App\Modules\Billing\Models\PayLaterPurchase;
 use App\Modules\Promotions\Models\VoucherReservation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -109,6 +110,11 @@ class Order extends Model
         return $this->hasOne(VoucherReservation::class);
     }
 
+    public function payLaterPurchase(): HasOne
+    {
+        return $this->hasOne(PayLaterPurchase::class);
+    }
+
     public function statusLabel(): string
     {
         return self::statusLabelFor($this->status);
@@ -142,14 +148,19 @@ class Order extends Model
 
     public function canCustomerChangePaymentMethod(): bool
     {
+        if ($this->payment_method === 'pay_later') {
+            return false;
+        }
+
         return $this->status === 'pending'
-            && (in_array($this->payment_status, ['unpaid', 'failed', 'expired'], true)
-                || ($this->payment_method === 'pay_later' && $this->payment_status === 'pending'));
+            && in_array($this->payment_status, ['unpaid', 'failed', 'expired'], true);
     }
 
     public function canCustomerCancel(): bool
     {
-        return $this->canCustomerChangePaymentMethod();
+        return $this->payment_method === 'pay_later'
+            ? $this->status === 'pending' && $this->payment_status !== 'paid'
+            : $this->canCustomerChangePaymentMethod();
     }
 
     public function estimatedDeliveryDate(): ?Carbon

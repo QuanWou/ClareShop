@@ -137,6 +137,7 @@ class CheckoutPageController extends Controller
                 'payments',
                 'discount',
                 'statusHistories',
+                'payLaterPurchase.attempts',
             ])
             ->firstOrFail();
 

@@ -4,12 +4,18 @@ namespace App\Modules\Customers\Actions;
 
 use App\Models\User;
 use App\Modules\Appointments\Models\Appointment;
+use App\Modules\Billing\Actions\ResolveClarePayWalletAction;
+use App\Modules\Billing\Models\PayLaterPurchase;
 use App\Modules\Orders\Models\Order;
 
 class ShowCustomerAccountAction
 {
+    public function __construct(private readonly ResolveClarePayWalletAction $resolveWallet) {}
+
     public function execute(User $user): array
     {
+        $wallet = $this->resolveWallet->execute($user);
+
         return [
             'orders' => Order::query()
                 ->where('user_id', $user->getKey())
@@ -40,6 +46,16 @@ class ShowCustomerAccountAction
                 ->where('user_id', $user->getKey())
                 ->count(),
             'voucherCount' => $user->vouchers()->count(),
+            'clarePayWallet' => $wallet,
+            'clarePayTransactions' => $wallet->transactions()->latest()->limit(20)->get(),
+            'payLaterPurchases' => PayLaterPurchase::query()
+                ->where('user_id', $user->getKey())
+                ->with('order')
+                ->orderByDesc('created_at')
+                ->limit(20)
+                ->get(),
+            'billingNotifications' => $user->notifications()->latest()->limit(20)->get(),
+            'unreadBillingNotificationCount' => $user->unreadNotifications()->count(),
             'wishlistProducts' => $user->wishlistProducts()
                 ->published()
                 ->withStorefrontSummary()

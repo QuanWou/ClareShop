@@ -1046,8 +1046,34 @@ if (checkoutForm) {
     const shippingSelectedEta = checkoutForm.querySelector('[data-shipping-selected-eta]');
     const hasInitialQuote = checkoutForm.dataset.hasInitialQuote === 'true';
     const initialSubtotal = checkoutForm.querySelector('[data-checkout-subtotal]')?.textContent ?? '';
+    const payLaterOptions = checkoutForm.querySelector('[data-pay-later-options]');
+    const payLaterTotal = checkoutForm.querySelector('[data-pay-later-total]');
+    const payLaterDueDate = checkoutForm.querySelector('[data-pay-later-due-date]');
     let quoteTimer;
     let activeQuoteRequest;
+
+    const syncPayLaterOptions = () => {
+        if (!payLaterOptions) return;
+
+        const selectedMethod = checkoutForm.querySelector('input[name="payment_method"]:checked')?.value;
+        const isPayLater = selectedMethod === 'pay_later';
+        payLaterOptions.hidden = !isPayLater;
+        payLaterOptions.querySelectorAll('input').forEach((input) => {
+            input.disabled = !isPayLater;
+        });
+
+        const selectedTerm = checkoutForm.querySelector('input[name="pay_later_term_months"]:checked')?.value ?? '2';
+        if (payLaterDueDate) payLaterDueDate.textContent = payLaterDueDate.dataset[`due${selectedTerm}`] ?? '';
+        if (payLaterTotal && orderTotal) payLaterTotal.textContent = orderTotal.textContent;
+    };
+
+    checkoutForm.querySelectorAll('input[name="payment_method"], input[name="pay_later_term_months"]').forEach((input) => {
+        input.addEventListener('change', syncPayLaterOptions);
+    });
+    if (orderTotal && payLaterTotal) {
+        new MutationObserver(syncPayLaterOptions).observe(orderTotal, { childList: true, characterData: true, subtree: true });
+    }
+    syncPayLaterOptions();
 
     const hasValidShippingAddress = (reportValidity = false) => {
         const valid = [...shippingFields].filter((field) => field.name !== 'shipping_address_line_2' && field.name !== 'shipping_postal_code').every((field) => Boolean(field.value.trim()));

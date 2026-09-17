@@ -21,7 +21,7 @@ class ChangeCustomerOrderPaymentMethodRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => ['required', 'string', Rule::in(PaymentMethodCatalog::codes())],
+            'payment_method' => ['required', 'string', Rule::in(array_values(array_diff(PaymentMethodCatalog::codes(), ['pay_later'])))],
         ];
     }
 

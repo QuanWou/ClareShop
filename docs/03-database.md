@@ -266,6 +266,17 @@ Lịch sử này là audit cho các xác nhận thanh toán thủ công; không 
 
 ## Nhóm Inventory — đã tạo cùng Checkout
 
+## Nhóm Billing — mua trước trả sau và Clare Pay
+
+- `clare_pay_wallets`: một ví cho mỗi user, lưu số dư hiện tại.
+- `pay_later_purchases`: nối user/order, snapshot tổng tiền, kỳ hạn 2/4 tháng, ngày bắt đầu/đến hạn, số dư nợ, phương thức chủ động chọn và trạng thái.
+- `clare_pay_transactions`: sổ cái nạp tiền/thanh toán, lưu chiều tiền, số dư trước/sau, trạng thái và mã provider.
+- `billing_payment_attempts`: attempt PayOS/PayPal mô phỏng/Clare Pay tách khỏi payment đơn hàng, có `purpose` để phân biệt nạp ví và thanh toán trả sau.
+- `pay_later_notification_events`: khóa idempotency cho từng mốc nhắc hạn.
+- `notifications`: thông báo tài khoản theo cơ chế Notifications của Laravel.
+
+Không có job hay scheduler nào được phép tự trừ số dư. Mọi debit Clare Pay phải phát sinh từ request xác nhận của chính khách hàng.
+
 ### `inventory_movements`
 
 | Cột | Kiểu / ràng buộc |

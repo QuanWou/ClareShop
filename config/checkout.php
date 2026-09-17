@@ -81,13 +81,13 @@ return [
         'pay_later' => [
             'label' => 'Mua trước, trả sau',
             'short_label' => 'Trả sau',
-            'description' => 'Lựa chọn trả sau được ghi nhận và chờ đối tác tín dụng xét duyệt.',
-            'provider' => 'pay_later_review',
-            'initial_status' => 'pending',
+            'description' => 'Thanh toán sau qua PayPal',
+            'provider' => 'pay_later',
+            'initial_status' => 'unpaid',
             'requires_qr' => false,
             'is_simulated' => true,
-            'confirmation_title' => 'Yêu cầu trả sau đang chờ xét duyệt.',
-            'confirmation_description' => 'Clare đã ghi nhận lựa chọn của bạn. Hệ thống chưa tự duyệt hạn mức hoặc tạo khoản vay.',
+            'confirmation_title' => 'Khoản trả sau đã được ghi nhận.',
+            'confirmation_description' => 'Bạn sẽ tự chọn phương thức thanh toán khi đến hạn. PayPal trong luồng này chỉ là mô phỏng.',
         ],
     ],
 

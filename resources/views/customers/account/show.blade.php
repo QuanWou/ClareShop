@@ -37,6 +37,9 @@
 
                     <nav class="account-profile-nav" aria-label="Nội dung tài khoản">
                         <a href="#account-orders">Đơn hàng <span>{{ $orderCount }}</span></a>
+                        <a href="#clare-pay">Clare Pay</a>
+                        <a href="#pay-later-purchases">Mua trước, trả sau <span>{{ $payLaterPurchases->count() }}</span></a>
+                        <a href="#billing-notifications">Thông báo <span>{{ $unreadBillingNotificationCount }}</span></a>
                         <a href="#account-services">Yêu cầu hỗ trợ <span>{{ $appointmentCount }}</span></a>
                         <a href="#account-wishlist">Yêu thích <span>{{ $wishlistProducts->count() }}</span></a>
                         <a href="#account-recent">Đã xem gần đây</a>
@@ -79,6 +82,54 @@
                                 <strong>{{ $defaultAddress ? 'Đã lưu' : 'Chưa lưu' }}</strong>
                                 <span>địa chỉ mặc định</span>
                             </div>
+                        </div>
+                    </section>
+
+                    <section class="account-panel" id="clare-pay" aria-labelledby="clare-pay-title">
+                        <div class="account-panel-heading">
+                            <div><p class="eyebrow">Ví nội bộ</p><h2 id="clare-pay-title">Clare Pay</h2></div>
+                            <p>Số dư: <strong>{{ \App\Modules\Shared\Support\Money::formatVnd($clarePayWallet->balance) }}</strong></p>
+                        </div>
+                        @if ($errors->has('amount') || $errors->has('confirm_top_up'))
+                            <div class="form-status form-status-error" role="alert">{{ $errors->first('amount') ?: $errors->first('confirm_top_up') }}</div>
+                        @endif
+                        <form class="account-form" method="POST" action="{{ route('account.clare-pay.top-up') }}">
+                            @csrf
+                            <label class="account-field"><span>Số tiền muốn nạp qua PayOS</span><input name="amount" type="number" min="10000" max="100000000" step="1000" required></label>
+                            <label><input name="confirm_top_up" type="checkbox" value="1" required> Tôi xác nhận tạo giao dịch nạp tiền PayOS.</label>
+                            <button class="button button-primary" type="submit">Nạp tiền</button>
+                        </form>
+                        <div class="account-record-list">
+                            @forelse ($clarePayTransactions as $transaction)
+                                <article class="account-record"><div><strong>{{ $transaction->type === 'top_up' ? 'Nạp Clare Pay' : 'Thanh toán khoản trả sau' }}</strong><span>{{ $transaction->created_at->format('H:i, d/m/Y') }} · {{ $transaction->status }}</span></div><b>{{ $transaction->direction === 'credit' ? '+' : '-' }}{{ \App\Modules\Shared\Support\Money::formatVnd($transaction->amount) }}</b></article>
+                            @empty
+                                <p class="account-empty">Chưa có giao dịch Clare Pay.</p>
+                            @endforelse
+                        </div>
+                    </section>
+
+                    <section class="account-panel" id="pay-later-purchases" aria-labelledby="pay-later-title">
+                        <div class="account-panel-heading"><div><p class="eyebrow">Thanh toán sau</p><h2 id="pay-later-title">Các khoản mua trước, trả sau</h2></div></div>
+                        <div class="account-record-list">
+                            @forelse ($payLaterPurchases as $purchase)
+                                <article class="account-record">
+                                    <div><strong>{{ $purchase->order->number }} · {{ $purchase->term_months }} tháng</strong><span>Đến hạn {{ $purchase->due_at->format('d/m/Y') }} · còn {{ \App\Modules\Shared\Support\Money::formatVnd($purchase->amount_due) }}</span></div>
+                                    <div><b>{{ $purchase->statusLabel() }}</b>@if($purchase->canPayNow()) <a href="{{ route('account.pay-later.pay', $purchase) }}">Thanh toán ngay</a>@endif</div>
+                                </article>
+                            @empty
+                                <p class="account-empty">Bạn chưa có khoản mua trước, trả sau nào.</p>
+                            @endforelse
+                        </div>
+                    </section>
+
+                    <section class="account-panel" id="billing-notifications" aria-labelledby="billing-notifications-title">
+                        <div class="account-panel-heading"><div><p class="eyebrow">Nhắc thanh toán</p><h2 id="billing-notifications-title">Thông báo</h2></div></div>
+                        <div class="account-record-list">
+                            @forelse ($billingNotifications as $notification)
+                                <article class="account-record"><div><strong>{{ $notification->data['title'] ?? 'Cập nhật thanh toán' }}</strong><span>{{ $notification->data['message'] ?? '' }} · {{ $notification->created_at->format('H:i, d/m/Y') }}</span></div>@if(filled($notification->data['action_url'] ?? null))<a href="{{ $notification->data['action_url'] }}">{{ $notification->data['action_label'] ?? 'Xem' }}</a>@endif</article>
+                            @empty
+                                <p class="account-empty">Chưa có thông báo thanh toán.</p>
+                            @endforelse
                         </div>
                     </section>
 

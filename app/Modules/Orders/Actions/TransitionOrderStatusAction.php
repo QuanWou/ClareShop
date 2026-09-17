@@ -2,13 +2,14 @@
 
 namespace App\Modules\Orders\Actions;
 
+use App\Modules\Billing\Models\PayLaterPurchase;
 use App\Modules\Catalog\Models\ProductVariant;
 use App\Modules\Orders\Mail\OrderStatusUpdatedMail;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderDiscount;
 use App\Modules\Orders\Models\OrderStatusHistory;
-use App\Modules\Promotions\Models\PromotionCode;
 use App\Modules\Promotions\Actions\ReleaseOrderVoucherAction;
+use App\Modules\Promotions\Models\PromotionCode;
 use App\Modules\Settings\Actions\ConfigureStoreMailAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -49,6 +50,15 @@ class TransitionOrderStatusAction
                 $this->ensureCancellationIsAllowed($lockedOrder);
                 $this->restoreInventory($lockedOrder, $actorId);
                 $this->restorePromotionUsage($lockedOrder, $cancelReason ?: 'Đơn hàng đã bị hủy.');
+                PayLaterPurchase::query()
+                    ->where('order_id', $lockedOrder->getKey())
+                    ->whereNotIn('status', ['paid', 'cancelled'])
+                    ->update([
+                        'status' => 'cancelled',
+                        'amount_due' => 0,
+                        'latest_failure_reason' => $cancelReason ?: 'Đơn hàng đã bị hủy.',
+                        'updated_at' => now(),
+                    ]);
             }
 
             $attributes = [

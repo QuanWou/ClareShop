@@ -18,6 +18,7 @@ class ShowCustomerOrderAction
                 'payments',
                 'discount',
                 'statusHistories',
+                'payLaterPurchase.attempts',
             ])
             ->firstOrFail();
     }

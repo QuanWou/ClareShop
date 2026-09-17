@@ -15,6 +15,7 @@ use App\Modules\Admin\Http\Controllers\AdminPromotionCodeController;
 use App\Modules\Admin\Http\Controllers\AdminReportController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
 use App\Modules\Appointments\Http\Controllers\AppointmentController;
+use App\Modules\Billing\Http\Controllers\CustomerBillingController;
 use App\Modules\Blog\Http\Controllers\BlogController;
 use App\Modules\Cart\Http\Controllers\BuyNowController;
 use App\Modules\Cart\Http\Controllers\CartController;
@@ -60,6 +61,8 @@ Route::get('/payments/paypal/cancel', [PayPalPaymentController::class, 'cancel']
 Route::get('/payments/momo/return', [MomoPaymentController::class, 'returned'])->middleware('auth')->name('payments.momo.return');
 Route::get('/payments/payos/return', [PayOsPaymentController::class, 'returned'])->middleware('auth')->name('payments.payos.return');
 Route::get('/payments/payos/cancel', [PayOsPaymentController::class, 'cancelled'])->middleware('auth')->name('payments.payos.cancel');
+Route::get('/payments/billing/payos/return', [CustomerBillingController::class, 'payOsReturn'])->middleware(['auth', 'active-user'])->name('billing.payos.return');
+Route::get('/payments/billing/payos/cancel', [CustomerBillingController::class, 'payOsCancel'])->middleware(['auth', 'active-user'])->name('billing.payos.cancel');
 
 Route::get('/products', [CatalogController::class, 'index'])->name('catalog.products.index');
 
@@ -110,6 +113,9 @@ Route::middleware(['auth', 'active-user'])->group(function (): void {
     Route::post('/account/orders/{order:number}/cancel', [CustomerOrderController::class, 'cancel'])->name('account.orders.cancel');
     Route::post('/account/orders/{order}/payments/{payment}/payos/retry', [PayOsPaymentController::class, 'retry'])->name('payments.payos.retry');
     Route::post('/account/orders/{order}/payments/{payment}/momo/retry', [MomoPaymentController::class, 'retry'])->name('payments.momo.retry');
+    Route::post('/account/clare-pay/top-up', [CustomerBillingController::class, 'topUp'])->name('account.clare-pay.top-up');
+    Route::get('/account/pay-later/{purchase}/pay', [CustomerBillingController::class, 'showPayLater'])->name('account.pay-later.pay');
+    Route::post('/account/pay-later/{purchase}/pay', [CustomerBillingController::class, 'payPayLater'])->name('account.pay-later.pay.store');
 
     Route::get('/checkout', [CheckoutPageController::class, 'show'])->name('checkout.show');
     Route::post('/checkout', [CheckoutPageController::class, 'store'])->name('checkout.store');

@@ -73,7 +73,7 @@ class CustomerOrderController extends Controller
         $message = match ($payment->provider) {
             'payos' => 'Đã đổi sang payOS và tạo mã QR mới có hiệu lực trong 3 phút.',
             'cod' => 'Đã đổi sang thanh toán khi nhận hàng.',
-            'pay_later_review' => 'Đã ghi nhận lựa chọn mua trước, trả sau.',
+            'pay_later' => 'Đã ghi nhận lựa chọn mua trước, trả sau.',
             default => 'Đã cập nhật phương thức thanh toán.',
         };
 

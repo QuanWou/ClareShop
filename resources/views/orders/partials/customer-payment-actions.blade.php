@@ -30,6 +30,7 @@
                     <legend>Phương thức thanh toán mới</legend>
                     <div class="order-payment-method-grid">
                         @foreach ($paymentMethods as $code => $method)
+                            @continue($code === 'pay_later')
                             <label class="order-payment-method-option">
                                 <input
                                     name="payment_method"

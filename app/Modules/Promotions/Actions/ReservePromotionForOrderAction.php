@@ -15,7 +15,7 @@ class ReservePromotionForOrderAction
             return null;
         }
 
-        $expiresAt = $order->payment_method === 'cod'
+        $expiresAt = in_array($order->payment_method, ['cod', 'pay_later'], true)
             ? null
             : now()->addMinutes((int) config('checkout.voucher.pending_minutes', 30));
 
