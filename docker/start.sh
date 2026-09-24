@@ -35,9 +35,13 @@ envsubst '${PORT}' \
     > /etc/nginx/conf.d/default.conf
 
 # ------------------------------------------------------------
-# Clear caches left from build/local machine
+# Clear compiled files left from the image without touching the database
+# cache store, whose table may not exist before the first migration.
 # ------------------------------------------------------------
-php artisan optimize:clear
+php artisan config:clear
+php artisan event:clear
+php artisan route:clear
+php artisan view:clear
 
 # ------------------------------------------------------------
 # Public storage symlink
@@ -70,6 +74,7 @@ fi
 # ------------------------------------------------------------
 # Production Laravel caches
 # ------------------------------------------------------------
+php artisan cache:clear
 php artisan config:cache
 php artisan view:cache
 
