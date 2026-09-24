@@ -6,7 +6,11 @@ FROM node:22-alpine AS frontend
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+# npm ci currently rejects Tailwind's platform-specific bundled WASI
+# dependency on Linux even though the lockfile is valid on Windows.
+# npm install still honors package-lock.json while resolving that optional
+# platform bundle correctly inside the Linux build image.
+RUN npm install --no-audit --no-fund
 
 COPY . .
 
