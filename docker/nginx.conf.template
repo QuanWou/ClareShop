@@ -1,0 +1,60 @@
+server {
+    listen ${PORT};
+    listen [::]:${PORT};
+
+    server_name _;
+
+    root /var/www/html/public;
+    index index.php index.html;
+
+    charset utf-8;
+
+    client_max_body_size 25M;
+
+    # Security headers
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+
+    # Laravel
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # PHP
+    location ~ \.php$ {
+        try_files $uri =404;
+
+        include fastcgi_params;
+
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
+
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $document_root;
+
+        fastcgi_param HTTPS on;
+        fastcgi_param HTTP_X_FORWARDED_PROTO https;
+
+        fastcgi_read_timeout 120;
+        fastcgi_send_timeout 120;
+    }
+
+    # Cache static assets
+    location ~* \.(?:css|js|jpg|jpeg|gif|png|webp|svg|ico|woff|woff2|ttf|eot)$ {
+        expires 7d;
+        access_log off;
+
+        try_files $uri /index.php?$query_string;
+    }
+
+    # Protect hidden files
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    # Prevent access to sensitive Laravel files
+    location ~* /(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$ {
+        deny all;
+    }
+}
