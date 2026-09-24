@@ -71,6 +71,13 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
     done
 fi
 
+# Seed only when explicitly enabled for a fresh environment. Keep this off
+# for normal deploys so production content is never overwritten.
+if [ "${RUN_SEEDERS:-false}" = "true" ]; then
+    echo "Seeding initial catalog and site content..."
+    php artisan db:seed --force
+fi
+
 # ------------------------------------------------------------
 # Production Laravel caches
 # ------------------------------------------------------------
